@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.21)
 project(psyonic_hand_driver)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -19,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDENCIES})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
+
+add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -137,7 +139,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_interface_node src/hand_interface_node.cpp src/hand_interface.cpp src/hand_serial.cpp)
+add_executable(${PROJECT_NAME}_interface_node src/hand_interface_node.cpp src/hand_interface.cpp src/hand_serial.cpp src/hand_ble.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,7 +152,7 @@ set_target_properties(${PROJECT_NAME}_interface_node PROPERTIES OUTPUT_NAME hand
 add_dependencies(${PROJECT_NAME}_interface_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_interface_node ${catkin_LIBRARIES} ${LIBMODBUS_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_interface_node ${catkin_LIBRARIES} ${LIBMODBUS_LIBRARIES} simpleble::simpleble)
 
 #############
 ## Install ##
