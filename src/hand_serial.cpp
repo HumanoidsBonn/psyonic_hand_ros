@@ -52,23 +52,19 @@ std::string to_string(FormatHeader header)
   }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
-std::unique_ptr<TouchSensorData> HandReplyV1or2::unpackTouchSensorData() const
+std::unique_ptr<TouchSensorDataUnion> HandReplyV1or2::unpackTouchSensorData() const
 {
   static_assert(TOUCH_SENSOR_NUM_VALS == sizeof(touch_sensor_data) * 2 / 3, "Packed and unpacked touch sensor data sizes do not match");
-  auto unpacked_touch_data = std::make_unique<TouchSensorData>();
-  uint16_t *vals = reinterpret_cast<uint16_t*>(unpacked_touch_data.get());
+  auto unpacked_touch_data = std::make_unique<TouchSensorDataUnion>();
   for(int bidx = TOUCH_SENSOR_NUM_VALS * 12 - 4; bidx >= 0; bidx -= 4)
   {
     int validx = bidx / 12;
     int arridx = bidx / 8;
     int shift_val = (bidx % 8);
-    vals[validx] |= ((touch_sensor_data[arridx] >> shift_val) &0x0F) << (bidx % 12);
+    unpacked_touch_data->values[validx] |= ((touch_sensor_data[arridx] >> shift_val) &0x0F) << (bidx % 12);
   }
   return unpacked_touch_data;
 }
-#pragma GCC diagnostic pop
 
 HandSerial::HandSerial()
 {

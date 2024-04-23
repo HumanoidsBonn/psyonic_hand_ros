@@ -68,7 +68,11 @@ static constexpr size_t HAND_MISC_COMMAND_SIZE = 3;
 
 static_assert(sizeof(HandMiscCommand) == HAND_MISC_COMMAND_SIZE, "HandMiscCommand size is not correct");
 
-struct __attribute__((__packed__)) TouchSensorData
+static constexpr size_t TOUCH_SENSOR_NUM_VALS = 30;
+static constexpr size_t TOUCH_SENSOR_DATA_SIZE = TOUCH_SENSOR_NUM_VALS * 2; // 16 bits per value
+static constexpr size_t TOUCH_SENSOR_PACKED_SIZE = TOUCH_SENSOR_NUM_VALS * 3 / 2; // 12 bits per value
+
+struct TouchSensorData
 {
   uint16_t index_site0;
   uint16_t index_site1;
@@ -102,11 +106,15 @@ struct __attribute__((__packed__)) TouchSensorData
   uint16_t thumb_site5;
 };
 
-static constexpr size_t TOUCH_SENSOR_NUM_VALS = 30;
-static constexpr size_t TOUCH_SENSOR_DATA_SIZE = TOUCH_SENSOR_NUM_VALS * 2; // 16 bits per value
-static constexpr size_t TOUCH_SENSOR_PACKED_SIZE = TOUCH_SENSOR_NUM_VALS * 3 / 2; // 12 bits per value
+union TouchSensorDataUnion
+{
+  TouchSensorData by_name;
+  uint16_t values[TOUCH_SENSOR_NUM_VALS];
+};
 
 static_assert(sizeof(TouchSensorData) == TOUCH_SENSOR_DATA_SIZE, "TouchSensorData size is not correct");
+
+static_assert(sizeof(TouchSensorDataUnion) == TOUCH_SENSOR_DATA_SIZE, "TouchSensorDataUnion size is not correct");
 
 // V1: motor current; V2: motor rotor velocity
 struct __attribute__((__packed__)) HandReplyV1or2
@@ -128,7 +136,7 @@ struct __attribute__((__packed__)) HandReplyV1or2
   uint8_t hot_cold_status;
   uint8_t checksum;
 
-  std::unique_ptr<TouchSensorData> unpackTouchSensorData() const;
+  std::unique_ptr<TouchSensorDataUnion> unpackTouchSensorData() const;
 };
 
 static constexpr size_t HAND_REPLY_V1OR2_SIZE = 72;

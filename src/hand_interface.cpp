@@ -59,6 +59,40 @@ bool PsyonicHand::connect(const std::string& device)
   return hand.connect(device);
 }
 
+/*struct __attribute__((__packed__)) TouchSensorData
+{
+  uint16_t index_site0;
+  uint16_t index_site1;
+  uint16_t index_site2;
+  uint16_t index_site3;
+  uint16_t index_site4;
+  uint16_t index_site5;
+  uint16_t middle_site0;
+  uint16_t middle_site1;
+  uint16_t middle_site2;
+  uint16_t middle_site3;
+  uint16_t middle_site4;
+  uint16_t middle_site5;
+  uint16_t ring_site0;
+  uint16_t ring_site1;
+  uint16_t ring_site2;
+  uint16_t ring_site3;
+  uint16_t ring_site4;
+  uint16_t ring_site5;
+  uint16_t pinky_site0;
+  uint16_t pinky_site1;
+  uint16_t pinky_site2;
+  uint16_t pinky_site3;
+  uint16_t pinky_site4;
+  uint16_t pinky_site5;
+  uint16_t thumb_site0;
+  uint16_t thumb_site1;
+  uint16_t thumb_site2;
+  uint16_t thumb_site3;
+  uint16_t thumb_site4;
+  uint16_t thumb_site5;
+};*/
+
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
   std::unique_ptr<HandReplyV1or2> status = hand.queryStatusV1();
@@ -82,6 +116,21 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
                   " pinky: " << joint_states.pinky.pos <<
                   " thumb1: " << joint_states.thumb1.pos <<
                   " thumb2: " << joint_states.thumb2.pos);
+
+  auto touch_data = status->unpackTouchSensorData();
+  if (!touch_data)
+  {
+    ROS_ERROR("Failed to unpack touch data");
+  }
+  else
+  {
+    const auto &touch = touch_data->by_name;
+    ROS_INFO_STREAM("index: " << touch.index_site0 << ", " << touch.index_site1 << ", " << touch.index_site2 << ", " << touch.index_site3 << ", " << touch.index_site4 << ", " << touch.index_site5);
+    ROS_INFO_STREAM("middle: " << touch.middle_site0 << ", " << touch.middle_site1 << ", " << touch.middle_site2 << ", " << touch.middle_site3 << ", " << touch.middle_site4 << ", " << touch.middle_site5);
+    ROS_INFO_STREAM("ring: " << touch.ring_site0 << ", " << touch.ring_site1 << ", " << touch.ring_site2 << ", " << touch.ring_site3 << ", " << touch.ring_site4 << ", " << touch.ring_site5);
+    ROS_INFO_STREAM("pinky: " << touch.pinky_site0 << ", " << touch.pinky_site1 << ", " << touch.pinky_site2 << ", " << touch.pinky_site3 << ", " << touch.pinky_site4 << ", " << touch.pinky_site5);
+    ROS_INFO_STREAM("thumb: " << touch.thumb_site0 << ", " << touch.thumb_site1 << ", " << touch.thumb_site2 << ", " << touch.thumb_site3 << ", " << touch.thumb_site4 << ", " << touch.thumb_site5 << "\n");
+  }
 }
 
 void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
