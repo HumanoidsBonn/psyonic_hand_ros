@@ -147,7 +147,7 @@ bool HandSerial::connect(const std::string &id)
   {
     sp.setPort(*port);
     sp.setBaudrate(460800);
-    sp.setTimeout(serial::Timeout::max(), 100, 0, 100, 0);
+    sp.setTimeout(serial::Timeout::max(), 250, 0, 250, 0);
     sp.open();
   }
   catch (const serial::IOException &ex)
@@ -168,7 +168,7 @@ std::unique_ptr<HandReplyV1or2> HandSerial::queryStatusV1()
     return nullptr;
   }
 
-  return receive<HandReplyV1or2>();
+  return receive<HandReplyV1or2>(ros::Duration(0.25));
 }
 
 } // namespace psyonic_hand_driver

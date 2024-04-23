@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
-  const std::string device = nhp.param<std::string>("device", "usb-FTDI_USB-RS422_Cable_FT75P0SM-if00-port0");
+  const std::string device = nhp.param<std::string>("device", "usb-FTDI_TTL232R_FTAM6SIZ-if00-port0");
 
   psyonic_hand_driver::PsyonicHand hand;
   controller_manager::ControllerManager cm(&hand, nhp);

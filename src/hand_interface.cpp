@@ -66,6 +66,7 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
   if (!status)
   {
     ROS_ERROR("Failed to read hand status");
+    return;
   }
 
   joint_states.index.pos = hand.posToRad(status->index_position);

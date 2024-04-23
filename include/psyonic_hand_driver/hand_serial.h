@@ -187,10 +187,16 @@ private:
   std::optional<std::string> getSerialPort(const std::string &id);
 
   template<typename T>
+  std::vector<uint8_t> PPP_stuff(const T &msg);
+
+  template<typename T>
+  std::unique_ptr<T> PPP_unstuff(const std::vector<uint8_t> &data);
+
+  template<typename T>
   bool send(T &msg);
 
   template<typename T>
-  std::unique_ptr<T> receive();
+  std::unique_ptr<T> receive(const ros::Duration &timeout);
 
 public:
   HandSerial();
@@ -207,37 +213,141 @@ public:
 };
 
 template<typename T>
+std::vector<uint8_t> HandSerial::PPP_stuff(const T &msg)
+{
+  std::vector<uint8_t> data;
+  data.push_back(0x7E);
+  const uint8_t *ptr = reinterpret_cast<const uint8_t*>(&msg);
+  size_t unstuffed_size = sizeof(msg);
+  for (size_t i = 0; i < unstuffed_size; i++)
+  {
+    if (ptr[i] == 0x7E || ptr[i] == 0x7D)
+    {
+      data.push_back(0x7D);
+      data.push_back(ptr[i] ^ 0x20);
+    }
+    else
+    {
+      data.push_back(ptr[i]);
+    }
+  }
+  data.push_back(0x7E);
+  return data;
+}
+
+template<typename T>
+std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_data)
+{
+  auto res = std::make_unique<T>();
+  uint8_t *ptr = reinterpret_cast<uint8_t*>(res.get());
+  size_t unstuffed_size = sizeof(T);
+
+  if (stuffed_data.size() < 2 || stuffed_data[0] != 0x7E || stuffed_data.back() != 0x7E)
+  {
+    ROS_ERROR("Invalid PPP frame");
+    return nullptr;
+  }
+
+  size_t read = 0;
+  for (size_t i = 1; i < stuffed_data.size(); i++)
+  {
+    if (stuffed_data[i] == 0x7E)
+    {
+      break;
+    }
+    if (read >= unstuffed_size)
+    {
+      ROS_ERROR("Invalid PPP frame");
+      return nullptr;
+    }
+    if (stuffed_data[i] == 0x7D)
+    {
+      i++;
+      if (i >= stuffed_data.size())
+      {
+        ROS_ERROR("Invalid PPP frame");
+        return nullptr;
+      }
+      ptr[read++] = stuffed_data[i] ^ 0x20;
+    }
+    else
+    {
+      ptr[read++] = stuffed_data[i];
+    }
+  }
+  if (read != unstuffed_size)
+  {
+    ROS_ERROR("Invalid PPP frame");
+    return nullptr;
+  }
+  return res;
+}
+
+template<typename T>
 bool HandSerial::send(T &msg)
 {
   uint8_t checksum = computeChecksum(msg);
   msg.checksum = checksum;
-  uint8_t *data = reinterpret_cast<uint8_t*>(&msg);
-  size_t size = sizeof(msg);
+  std::vector<uint8_t> data = PPP_stuff(msg);
+  size_t written = 0;
   try
   {
-    sp.write(data, size);
+    written = sp.write(data);
   }
   catch (const serial::IOException &ex)
   {
     ROS_ERROR_STREAM(ex.what());
     return false;
   }
+  if (written != data.size())
+  {
+    ROS_ERROR_STREAM("Failed to write all bytes; wrote " << written << " bytes out of " << data.size() << " bytes");
+    return false;
+  }
   return true;
 }
 
 template<typename T>
-std::unique_ptr<T> HandSerial::receive()
+std::unique_ptr<T> HandSerial::receive(const ros::Duration &timeout)
 {
-  auto res = std::make_unique<T>();
-  uint8_t *data = reinterpret_cast<uint8_t*>(res.get());
-  size_t size = sizeof(T);
+  size_t MSG_SIZE = sizeof(T);
+  size_t BUF_SIZE = 2*MSG_SIZE + 2;
+  std::vector<uint8_t> buffer(BUF_SIZE);
+  size_t read_ind = 0;
+  ros::Time start = ros::Time::now();
   try
   {
-    sp.read(data, size);
+    while (buffer[0] != 0x7E && ros::Time::now() - start < timeout)
+    {
+      sp.read(buffer.data(), 1);
+    }
+    if (buffer[0] != 0x7E)
+    {
+      ROS_ERROR_STREAM("Failed to find start of PPP frame; read " << read_ind << " bytes");
+      return nullptr;
+    }
+    read_ind = 1;
+    while ((read_ind < 2 || buffer[read_ind - 1] != 0x7E) && ros::Time::now() - start < timeout)
+    {
+      size_t read_bytes = sp.read(buffer.data() + read_ind, BUF_SIZE - read_ind);
+      read_ind += read_bytes;
+    }
+    if (read_ind < 2 || buffer[read_ind - 1] != 0x7E)
+    {
+      ROS_ERROR_STREAM("Failed to find end of PPP frame; read " << read_ind << " bytes");
+      return nullptr;
+    }
   }
   catch (const serial::IOException &ex)
   {
     ROS_ERROR_STREAM(ex.what());
+    return nullptr;
+  }
+  buffer.resize(read_ind);
+  auto res = PPP_unstuff<T>(buffer);
+  if (!res)
+  {
+    ROS_ERROR("Failed to unstuff PPP frame");
     return nullptr;
   }
   uint8_t checksum = computeChecksum(*res);
