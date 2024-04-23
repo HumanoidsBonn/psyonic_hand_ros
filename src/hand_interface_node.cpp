@@ -16,6 +16,12 @@ int main(int argc, char **argv)
   psyonic_hand_driver::PsyonicHand hand;
   controller_manager::ControllerManager cm(&hand, nhp);
 
+  if (!hand.connect(device))
+  {
+    ROS_ERROR("Failed to connect to hand");
+    return 1;
+  }
+
   for (ros::Rate r(200); ros::ok(); r.sleep())
   {
     auto time = ros::Time::now();

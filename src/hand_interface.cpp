@@ -54,8 +54,33 @@ PsyonicHand::~PsyonicHand()
 {
 }
 
+bool PsyonicHand::connect(const std::string& device)
+{
+  return hand.connect(device);
+}
+
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
+  std::unique_ptr<HandReplyV1or2> status = hand.queryStatusV1();
+
+  if (!status)
+  {
+    ROS_ERROR("Failed to read hand status");
+  }
+
+  joint_states.index.pos = hand.posToRad(status->index_position);
+  joint_states.middle.pos = hand.posToRad(status->middle_position);
+  joint_states.ring.pos = hand.posToRad(status->ring_position);
+  joint_states.pinky.pos = hand.posToRad(status->pinky_position);
+  joint_states.thumb1.pos = hand.posToRad(status->thumb_flexor_position);
+  joint_states.thumb2.pos = hand.posToRad(status->thumb_rotator_position);
+
+  ROS_INFO_STREAM("index: " << joint_states.index.pos <<
+                  " middle: " << joint_states.middle.pos <<
+                  " ring: " << joint_states.ring.pos <<
+                  " pinky: " << joint_states.pinky.pos <<
+                  " thumb1: " << joint_states.thumb1.pos <<
+                  " thumb2: " << joint_states.thumb2.pos);
 }
 
 void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)

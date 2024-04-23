@@ -7,15 +7,59 @@
 namespace psyonic_hand_driver
 {
 
+std::string to_string(FormatHeader header)
+{
+  switch (header)
+  {
+  case FormatHeader::POSITION_MODE_V1:
+    return "POSITION_MODE_V1";
+  case FormatHeader::POSITION_MODE_V2:
+    return "POSITION_MODE_V2";
+  case FormatHeader::POSITION_MODE_V3:
+    return "POSITION_MODE_V3";
+  case FormatHeader::VELOCITY_MODE_V1:
+    return "VELOCITY_MODE_V1";
+  case FormatHeader::VELOCITY_MODE_V2:
+    return "VELOCITY_MODE_V2";
+  case FormatHeader::VELOCITY_MODE_V3:
+    return "VELOCITY_MODE_V3";
+  case FormatHeader::TORQUE_MODE_V1:
+    return "TORQUE_MODE_V1";
+  case FormatHeader::TORQUE_MODE_V2:
+    return "TORQUE_MODE_V2";
+  case FormatHeader::TORQUE_MODE_V3:
+    return "TORQUE_MODE_V3";
+  case FormatHeader::VOLTAGE_MODE_V1:
+    return "VOLTAGE_MODE_V1";
+  case FormatHeader::VOLTAGE_MODE_V2:
+    return "VOLTAGE_MODE_V2";
+  case FormatHeader::VOLTAGE_MODE_V3:
+    return "VOLTAGE_MODE_V3";
+  case FormatHeader::READ_ONLY_MODE_REPLY_V1:
+    return "READ_ONLY_MODE_REPLY_V1";
+  case FormatHeader::READ_ONLY_MODE_REPLY_V2:
+    return "READ_ONLY_MODE_REPLY_V2";
+  case FormatHeader::READ_ONLY_MODE_REPLY_V3:
+    return "READ_ONLY_MODE_REPLY_V3";
+  case FormatHeader::UPSAMPLE_THUMB_ROTATOR_ENABLE:
+    return "UPSAMPLE_THUMB_ROTATOR_ENABLE";
+  case FormatHeader::UPSAMPLE_THUMB_ROTATOR_DISABLE:
+    return "UPSAMPLE_THUMB_ROTATOR_DISABLE";
+  case FormatHeader::EXIT_API_CONTROL_MODE:
+    return "EXIT_API_CONTROL_MODE";
+  default:
+    return "UNKNOWN: " + static_cast<int>(header);
+  }
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 std::unique_ptr<TouchSensorData> HandReplyV1or2::unpackTouchSensorData() const
 {
-  static constexpr size_t NUM_VALS = sizeof(TouchSensorData) / 2;
-  static_assert(NUM_VALS == sizeof(touch_sensor_data) * 2 / 3, "Packed and unpacked touch sensor data sizes do not match");
+  static_assert(TOUCH_SENSOR_NUM_VALS == sizeof(touch_sensor_data) * 2 / 3, "Packed and unpacked touch sensor data sizes do not match");
   auto unpacked_touch_data = std::make_unique<TouchSensorData>();
   uint16_t *vals = reinterpret_cast<uint16_t*>(unpacked_touch_data.get());
-  for(int bidx = NUM_VALS * 12 - 4; bidx >= 0; bidx -= 4)
+  for(int bidx = TOUCH_SENSOR_NUM_VALS * 12 - 4; bidx >= 0; bidx -= 4)
   {
     int validx = bidx / 12;
     int arridx = bidx / 8;
@@ -112,6 +156,19 @@ bool HandSerial::connect(const std::string &id)
     return false;
   }
   return true;
+}
+
+std::unique_ptr<HandReplyV1or2> HandSerial::queryStatusV1()
+{
+  HandMiscCommand msg;
+  msg.header = FormatHeader::READ_ONLY_MODE_REPLY_V1;
+
+  if (!send(msg))
+  {
+    return nullptr;
+  }
+
+  return receive<HandReplyV1or2>();
 }
 
 } // namespace psyonic_hand_driver

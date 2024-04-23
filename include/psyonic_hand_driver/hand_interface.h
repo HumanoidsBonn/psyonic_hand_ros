@@ -35,11 +35,13 @@ private:
   hardware_interface::JointStateInterface jnt_state_interface;
   hardware_interface::PositionJointInterface jnt_pos_interface;
 
-  HandSerial serial;
+  HandSerial hand;
 
 public:
   PsyonicHand();
   virtual ~PsyonicHand();
+
+  bool connect(const std::string& device);
 
   /** \brief Read data from the robot hardware.
    *
