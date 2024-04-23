@@ -7,6 +7,25 @@
 namespace psyonic_hand_driver
 {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
+std::unique_ptr<TouchSensorData> HandReplyV1or2::unpackTouchSensorData() const
+{
+  static constexpr size_t NUM_VALS = sizeof(TouchSensorData) / 2;
+  static_assert(NUM_VALS == sizeof(touch_sensor_data) * 2 / 3, "Packed and unpacked touch sensor data sizes do not match");
+  auto unpacked_touch_data = std::make_unique<TouchSensorData>();
+  uint16_t *vals = reinterpret_cast<uint16_t*>(unpacked_touch_data.get());
+  for(int bidx = NUM_VALS * 12 - 4; bidx >= 0; bidx -= 4)
+  {
+    int validx = bidx / 12;
+    int arridx = bidx / 8;
+    int shift_val = (bidx % 8);
+    vals[validx] |= ((touch_sensor_data[arridx] >> shift_val) &0x0F) << (bidx % 12);
+  }
+  return unpacked_touch_data;
+}
+#pragma GCC diagnostic pop
+
 HandSerial::HandSerial()
 {
 }
@@ -71,6 +90,28 @@ std::optional<std::string> HandSerial::getSerialPort(const std::string &id)
     ROS_ERROR_STREAM(ex.what());
   }
   return std::nullopt;
+}
+
+bool HandSerial::connect(const std::string &id)
+{
+  auto port = getSerialPort(id);
+  if (!port)
+  {
+    return false;
+  }
+  try
+  {
+    sp.setPort(*port);
+    sp.setBaudrate(460800);
+    sp.setTimeout(serial::Timeout::max(), 100, 0, 100, 0);
+    sp.open();
+  }
+  catch (const serial::IOException &ex)
+  {
+    ROS_ERROR_STREAM(ex.what());
+    return false;
+  }
+  return true;
 }
 
 } // namespace psyonic_hand_driver
