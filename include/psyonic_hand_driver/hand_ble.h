@@ -14,6 +14,8 @@ private:
   SimpleBLE::Characteristic hand_rx_characteristic;
   SimpleBLE::Characteristic hand_tx_characteristic;
 
+  bool is_connected;
+
   void peripheralFound(SimpleBLE::Peripheral peripheral);
   void handMessageReceived(SimpleBLE::ByteArray payload);
 
@@ -22,7 +24,7 @@ public:
   ~HandBLE();
 
   bool startScanForHand();
-  bool isConnected() { return hand.initialized() && hand.is_connected(); }
+  bool isConnected() { return is_connected; }
 
   void sendCommand(const std::string& command);
 };

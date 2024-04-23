@@ -37,10 +37,6 @@ int main(int argc, char **argv)
 
   hand_ble.sendCommand("g08:0.20");
 
-  ros::waitForShutdown();
-
-  return 0;
-
   const std::string device = nhp.param<std::string>("device", "usb-FTDI_TTL232R_FTAM6SIZ-if00-port0");
 
   psyonic_hand_driver::PsyonicHand hand;

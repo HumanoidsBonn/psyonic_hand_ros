@@ -5,7 +5,7 @@
 namespace psyonic_hand_driver
 {
 
-HandBLE::HandBLE()
+HandBLE::HandBLE() : is_connected(false)
 {
 }
 
@@ -75,6 +75,7 @@ void HandBLE::peripheralFound(SimpleBLE::Peripheral peripheral)
     {
       ROS_ERROR("Hand TX characteristic not found");
     }
+    is_connected = true;
   }
 }
 
@@ -113,15 +114,9 @@ void HandBLE::handMessageReceived(SimpleBLE::ByteArray payload)
 
 void HandBLE::sendCommand(const std::string& command)
 {
-  if (!hand.initialized() || !hand.is_connected())
+  if (!is_connected)
   {
     ROS_ERROR("Hand not connected");
-    return;
-  }
-
-  if (!hand_rx_characteristic.can_write_command())
-  {
-    ROS_ERROR("Hand RX characteristic cannot write command");
     return;
   }
 
