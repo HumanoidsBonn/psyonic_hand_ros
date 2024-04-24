@@ -12,7 +12,7 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
-  psyonic_hand_driver::HandBLE hand_ble;
+  /*psyonic_hand_driver::HandBLE hand_ble;
   hand_ble.startScanForHand();
 
   for (ros::Rate r(50); ros::ok(); r.sleep())
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
 
   ros::Duration(5.0).sleep();
 
-  hand_ble.sendCommand("g08:0.20");
+  hand_ble.sendCommand("g08:0.20");*/
 
   const std::string device = nhp.param<std::string>("device", "usb-FTDI_TTL232R_FTAM6SIZ-if00-port0");
 
@@ -48,13 +48,20 @@ int main(int argc, char **argv)
     return 1;
   }
 
-  for (ros::Rate r(200); ros::ok(); r.sleep())
+  ros::Time last_read_time = ros::Time::now();
+  ros::Time last_update_time = ros::Time::now();
+  ros::Time last_write_time = ros::Time::now();
+  while(ros::ok())
   {
-    auto time = ros::Time::now();
-    hand.read(time, r.expectedCycleTime()*2);
-    cm.update(time, r.expectedCycleTime()*2);
-    r.sleep();
-    hand.write(ros::Time::now(), r.expectedCycleTime()*2);
+    ros::Time read_time = ros::Time::now();
+    hand.read(read_time, read_time - last_read_time);
+    last_read_time = read_time;
+    ros::Time update_time = ros::Time::now();
+    cm.update(update_time, update_time - last_update_time);
+    last_update_time = update_time;
+    ros::Time write_time = ros::Time::now();
+    hand.write(write_time, write_time - last_write_time);
+    last_write_time = write_time;
   }
 
   return 0;

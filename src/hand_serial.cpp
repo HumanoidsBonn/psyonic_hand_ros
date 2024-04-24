@@ -154,10 +154,29 @@ bool HandSerial::connect(const std::string &id)
   return true;
 }
 
-std::unique_ptr<HandReplyV1or2> HandSerial::queryStatusV1()
+std::unique_ptr<HandReplyV1or2> HandSerial::queryStatusV2()
 {
   HandMiscCommand msg;
-  msg.header = FormatHeader::READ_ONLY_MODE_REPLY_V1;
+  msg.header = FormatHeader::READ_ONLY_MODE_REPLY_V2;
+
+  if (!send(msg))
+  {
+    return nullptr;
+  }
+
+  return receive<HandReplyV1or2>(ros::Duration(0.25));
+}
+
+std::unique_ptr<HandReplyV1or2> HandSerial::sendPositionsV2(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
+{
+  HandControlCommand msg;
+  msg.header = FormatHeader::POSITION_MODE_V2;
+  msg.index_data = radToPos(index);
+  msg.middle_data = radToPos(middle);
+  msg.ring_data = radToPos(ring);
+  msg.pinky_data = radToPos(pinky);
+  msg.thumb_flexor_data = radToPos(thumb_flexor);
+  msg.thumb_rotator_data = radToPos(thumb_rotator);
 
   if (!send(msg))
   {

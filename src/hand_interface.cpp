@@ -41,11 +41,11 @@ PsyonicHand::PsyonicHand()
   hardware_interface::JointHandle pos_handle_pinky(jnt_state_interface.getHandle("pinky_joint"), &joint_states.pinky.cmd);
   jnt_pos_interface.registerHandle(pos_handle_pinky);
 
-  hardware_interface::JointHandle pos_handle_thumb1(jnt_state_interface.getHandle("thumb1_joint"), &joint_states.thumb1.cmd);
-  jnt_pos_interface.registerHandle(pos_handle_thumb1);
-
-  hardware_interface::JointHandle pos_handle_thumb2(jnt_state_interface.getHandle("thumb2_joint"), &joint_states.thumb2.cmd);
+  hardware_interface::JointHandle pos_handle_thumb2(jnt_state_interface.getHandle("thumb1_joint"), &joint_states.thumb1.cmd);
   jnt_pos_interface.registerHandle(pos_handle_thumb2);
+
+  hardware_interface::JointHandle pos_handle_thumb1(jnt_state_interface.getHandle("thumb2_joint"), &joint_states.thumb2.cmd);
+  jnt_pos_interface.registerHandle(pos_handle_thumb1);
 
   registerInterface(&jnt_pos_interface);
 }
@@ -59,43 +59,38 @@ bool PsyonicHand::connect(const std::string& device)
   return hand.connect(device);
 }
 
-/*struct __attribute__((__packed__)) TouchSensorData
+bool PsyonicHand::commandReceived()
 {
-  uint16_t index_site0;
-  uint16_t index_site1;
-  uint16_t index_site2;
-  uint16_t index_site3;
-  uint16_t index_site4;
-  uint16_t index_site5;
-  uint16_t middle_site0;
-  uint16_t middle_site1;
-  uint16_t middle_site2;
-  uint16_t middle_site3;
-  uint16_t middle_site4;
-  uint16_t middle_site5;
-  uint16_t ring_site0;
-  uint16_t ring_site1;
-  uint16_t ring_site2;
-  uint16_t ring_site3;
-  uint16_t ring_site4;
-  uint16_t ring_site5;
-  uint16_t pinky_site0;
-  uint16_t pinky_site1;
-  uint16_t pinky_site2;
-  uint16_t pinky_site3;
-  uint16_t pinky_site4;
-  uint16_t pinky_site5;
-  uint16_t thumb_site0;
-  uint16_t thumb_site1;
-  uint16_t thumb_site2;
-  uint16_t thumb_site3;
-  uint16_t thumb_site4;
-  uint16_t thumb_site5;
-};*/
+  JointState *joint_states_ptr = reinterpret_cast<JointState*>(&joint_states);
+  bool received = false;
+  for (size_t i = 0; i < NUM_HAND_JOINTS; i++)
+  {
+    if (std::isnan(joint_states_ptr[i].cmd)) // set to current position
+    {
+      joint_states_ptr[i].cmd = joint_states_ptr[i].pos;
+    }
+    else if (joint_states_ptr[i].cmd != joint_states_ptr[i].last_cmd)
+    {
+      joint_states_ptr[i].last_cmd = joint_states_ptr[i].cmd;
+      received = true;
+    }
+  }
+  return received;
+}
 
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
-  std::unique_ptr<HandReplyV1or2> status = hand.queryStatusV1();
+  std::unique_ptr<HandReplyV1or2> status;
+  if (position_control_mode)
+  {
+    ROS_INFO_STREAM("In position control mode, repeating last command");
+    status = hand.sendPositionsV2(joint_states.index.cmd, joint_states.middle.cmd, joint_states.ring.cmd, joint_states.pinky.cmd, joint_states.thumb2.cmd, joint_states.thumb1.cmd);
+  }
+  else
+  {
+    ROS_INFO_STREAM("No command received, going to read only mode");
+    status = hand.queryStatusV2();
+  }
 
   if (!status)
   {
@@ -103,21 +98,42 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
     return;
   }
 
-  joint_states.index.pos = hand.posToRad(status->index_position);
-  joint_states.middle.pos = hand.posToRad(status->middle_position);
-  joint_states.ring.pos = hand.posToRad(status->ring_position);
-  joint_states.pinky.pos = hand.posToRad(status->pinky_position);
-  joint_states.thumb1.pos = hand.posToRad(status->thumb_flexor_position);
-  joint_states.thumb2.pos = hand.posToRad(status->thumb_rotator_position);
+  joint_states.index.pos = posToRad(status->index_position);
+  joint_states.middle.pos = posToRad(status->middle_position);
+  joint_states.ring.pos = posToRad(status->ring_position);
+  joint_states.pinky.pos = posToRad(status->pinky_position);
+  joint_states.thumb2.pos = posToRad(status->thumb_flexor_position);
+  joint_states.thumb1.pos = posToRad(status->thumb_rotator_position);
 
-  ROS_INFO_STREAM("index: " << joint_states.index.pos <<
+  joint_states.index.vel = rotorVelToRadPerSec(status->index_current_or_velocity) / 649.0;
+  joint_states.middle.vel = rotorVelToRadPerSec(status->middle_current_or_velocity) / 649.0;
+  joint_states.ring.vel = rotorVelToRadPerSec(status->ring_current_or_velocity) / 649.0;
+  joint_states.pinky.vel = rotorVelToRadPerSec(status->pinky_current_or_velocity) / 649.0;
+  joint_states.thumb2.vel = rotorVelToRadPerSec(status->thumb_flexor_current_or_velocity) / 649.0;
+  joint_states.thumb1.vel = rotorVelToRadPerSec(status->thumb_rotator_current_or_velocity) / 162.45;
+
+  joint_states.index.eff = 0;
+  joint_states.middle.eff = 0;
+  joint_states.ring.eff = 0;
+  joint_states.pinky.eff = 0;
+  joint_states.thumb2.eff = 0;
+  joint_states.thumb1.eff = 0;
+
+  ROS_INFO_STREAM("pos: index: " << joint_states.index.pos <<
                   " middle: " << joint_states.middle.pos <<
                   " ring: " << joint_states.ring.pos <<
                   " pinky: " << joint_states.pinky.pos <<
                   " thumb1: " << joint_states.thumb1.pos <<
                   " thumb2: " << joint_states.thumb2.pos);
 
-  auto touch_data = status->unpackTouchSensorData();
+  ROS_INFO_STREAM("vel: index: " << joint_states.index.vel <<
+                  " middle: " << joint_states.middle.vel <<
+                  " ring: " << joint_states.ring.vel <<
+                  " pinky: " << joint_states.pinky.vel <<
+                  " thumb1: " << joint_states.thumb1.vel <<
+                  " thumb2: " << joint_states.thumb2.vel);
+
+  /*auto touch_data = status->unpackTouchSensorData();
   if (!touch_data)
   {
     ROS_ERROR("Failed to unpack touch data");
@@ -130,11 +146,23 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
     ROS_INFO_STREAM("ring: " << touch.ring_site0 << ", " << touch.ring_site1 << ", " << touch.ring_site2 << ", " << touch.ring_site3 << ", " << touch.ring_site4 << ", " << touch.ring_site5);
     ROS_INFO_STREAM("pinky: " << touch.pinky_site0 << ", " << touch.pinky_site1 << ", " << touch.pinky_site2 << ", " << touch.pinky_site3 << ", " << touch.pinky_site4 << ", " << touch.pinky_site5);
     ROS_INFO_STREAM("thumb: " << touch.thumb_site0 << ", " << touch.thumb_site1 << ", " << touch.thumb_site2 << ", " << touch.thumb_site3 << ", " << touch.thumb_site4 << ", " << touch.thumb_site5 << "\n");
-  }
+  }*/
 }
 
 void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
 {
+  bool received = commandReceived();
+  ROS_INFO_STREAM("Received command: " << received);
+  if (received)
+  {
+    ROS_INFO_STREAM("Sending: " << joint_states.index.cmd << ", " << joint_states.middle.cmd << ", " << joint_states.ring.cmd << ", " << joint_states.pinky.cmd << ", " << joint_states.thumb2.cmd << ", " << joint_states.thumb1.cmd);
+    std::unique_ptr<HandReplyV1or2> status = hand.sendPositionsV2(joint_states.index.cmd, joint_states.middle.cmd, joint_states.ring.cmd, joint_states.pinky.cmd, joint_states.thumb2.cmd, joint_states.thumb1.cmd);
+    if (!status)
+    {
+      ROS_ERROR("Failed to send hand command");
+    }
+    position_control_mode = true; // automatically switch to position control mode if command received
+  }
 }
 
 } // namespace psyonic_hand_driver

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hand_data_conversion.h"
+
 #include <vector>
 #include <string>
 #include <optional>
@@ -210,14 +212,11 @@ public:
   HandSerial();
   ~HandSerial();
 
-  double posToDegrees(int16_t pos) { return pos * 150.0 / 32767.0;}
-  int16_t degreesToPos(double degrees ) { return static_cast<int16_t>(degrees * 32767.0 / 150.0); }
-  double posToRad(int16_t pos) { return pos * M_PI / 39320.4;}
-  int16_t radToPos(double rad) { return static_cast<int16_t>(rad * 39320.4 / M_PI); }
-
   bool connect(const std::string &id);
 
-  std::unique_ptr<HandReplyV1or2> queryStatusV1();
+  std::unique_ptr<HandReplyV1or2> queryStatusV2();
+
+  std::unique_ptr<HandReplyV1or2> sendPositionsV2(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 };
 
 template<typename T>
@@ -251,9 +250,14 @@ std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_d
   uint8_t *ptr = reinterpret_cast<uint8_t*>(res.get());
   constexpr size_t UNSTUFFED_SIZE = sizeof(T);
 
-  if (stuffed_data.size() < 2 || stuffed_data[0] != 0x7E || stuffed_data.back() != 0x7E)
+  if (stuffed_data.size() < 2)
   {
-    ROS_ERROR("Invalid PPP frame");
+    ROS_ERROR_STREAM("Invalid PPP frame: Too short");
+    return nullptr;
+  }
+  if (stuffed_data[0] != 0x7E || stuffed_data.back() != 0x7E)
+  {
+    ROS_ERROR_STREAM("Invalid PPP frame: Missing start or end flag");
     return nullptr;
   }
 
@@ -266,7 +270,7 @@ std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_d
     }
     if (read >= UNSTUFFED_SIZE)
     {
-      ROS_ERROR("Invalid PPP frame");
+      ROS_ERROR_STREAM("Invalid PPP frame; more than " << UNSTUFFED_SIZE << " bytes read");
       return nullptr;
     }
     if (stuffed_data[i] == 0x7D)
@@ -274,7 +278,7 @@ std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_d
       i++;
       if (i >= stuffed_data.size())
       {
-        ROS_ERROR("Invalid PPP frame");
+        ROS_ERROR_STREAM("Invalid PPP frame; more than " << UNSTUFFED_SIZE << " bytes read");
         return nullptr;
       }
       ptr[read++] = stuffed_data[i] ^ 0x20;
@@ -286,7 +290,7 @@ std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_d
   }
   if (read != UNSTUFFED_SIZE)
   {
-    ROS_ERROR("Invalid PPP frame");
+    ROS_ERROR_STREAM("Invalid PPP frame; " << read << " bytes read out of " << UNSTUFFED_SIZE << " expected bytes");
     return nullptr;
   }
   return res;

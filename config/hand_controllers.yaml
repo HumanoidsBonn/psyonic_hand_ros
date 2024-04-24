@@ -1,0 +1,23 @@
+index_joint_controller:
+  type: position_controllers/JointPositionController
+  joint: index_joint
+
+middle_joint_controller:
+  type: position_controllers/JointPositionController
+  joint: middle_joint
+
+ring_joint_controller:
+  type: position_controllers/JointPositionController
+  joint: ring_joint
+
+pinky_joint_controller:
+  type: position_controllers/JointPositionController
+  joint: pinky_joint
+
+thumb1_joint_controller:
+  type: position_controllers/JointPositionController
+  joint: thumb1_joint
+
+thumb2_joint_controller:
+  type: position_controllers/JointPositionController
+  joint: thumb2_joint

@@ -14,7 +14,8 @@ struct JointState
   double pos;
   double vel;
   double eff;
-  double cmd;
+  double cmd = std::numeric_limits<double>::quiet_NaN();
+  double last_cmd = std::numeric_limits<double>::quiet_NaN();
 };
 
 struct HandJointStates
@@ -27,6 +28,10 @@ struct HandJointStates
   JointState thumb2;
 };
 
+static constexpr size_t NUM_HAND_JOINTS = 6;
+
+static_assert(sizeof(HandJointStates) == NUM_HAND_JOINTS * sizeof(JointState), "HandJointStates size is not correct");
+
 class PsyonicHand : public hardware_interface::RobotHW
 {
 private:
@@ -37,11 +42,19 @@ private:
 
   HandSerial hand;
 
+  bool position_control_mode = false;
+
 public:
   PsyonicHand();
   virtual ~PsyonicHand();
 
   bool connect(const std::string& device);
+
+  /** \brief Check if a command has been received, adjust if necessary
+   *
+   * \return true if a command has been received
+   */
+  bool commandReceived();
 
   /** \brief Read data from the robot hardware.
    *

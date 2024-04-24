@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- Load hardware interface -->
+  <node name="hand_interface_node" pkg="psyonic_hand_driver" type="hand_interface_node" output="screen">
+    <rosparam file="$(find psyonic_hand_driver)/config/hand_controllers.yaml" />
+  </node>
+
+  <node ns="hand_interface_node" name="hand_controller_spawner" pkg="controller_manager" type="spawner"
+    args="index_joint_controller middle_joint_controller ring_joint_controller pinky_joint_controller thumb1_joint_controller thumb2_joint_controller">
+  </node>
+
+</launch>
