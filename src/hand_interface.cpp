@@ -80,16 +80,16 @@ bool PsyonicHand::commandReceived()
 
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
-  std::unique_ptr<HandReplyV1or2> status;
+  std::unique_ptr<HandReply> status;
   if (position_control_mode)
   {
     ROS_INFO_STREAM("In position control mode, repeating last command");
-    status = hand.sendPositionsV2(joint_states.index.cmd, joint_states.middle.cmd, joint_states.ring.cmd, joint_states.pinky.cmd, joint_states.thumb2.cmd, joint_states.thumb1.cmd);
+    status = hand.sendPositions(ReplyMode::V2, joint_states.index.cmd, joint_states.middle.cmd, joint_states.ring.cmd, joint_states.pinky.cmd, joint_states.thumb2.cmd, joint_states.thumb1.cmd);
   }
   else
   {
     ROS_INFO_STREAM("No command received, going to read only mode");
-    status = hand.queryStatusV2();
+    status = hand.queryStatus(ReplyMode::V2);
   }
 
   if (!status)
@@ -98,19 +98,19 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
     return;
   }
 
-  joint_states.index.pos = posToRad(status->index_position);
-  joint_states.middle.pos = posToRad(status->middle_position);
-  joint_states.ring.pos = posToRad(status->ring_position);
-  joint_states.pinky.pos = posToRad(status->pinky_position);
-  joint_states.thumb2.pos = posToRad(status->thumb_flexor_position);
-  joint_states.thumb1.pos = posToRad(status->thumb_rotator_position);
+  joint_states.index.pos = posToRad(status->v1or2.index_position);
+  joint_states.middle.pos = posToRad(status->v1or2.middle_position);
+  joint_states.ring.pos = posToRad(status->v1or2.ring_position);
+  joint_states.pinky.pos = posToRad(status->v1or2.pinky_position);
+  joint_states.thumb2.pos = posToRad(status->v1or2.thumb_flexor_position);
+  joint_states.thumb1.pos = posToRad(status->v1or2.thumb_rotator_position);
 
-  joint_states.index.vel = rotorVelToRadPerSec(status->index_current_or_velocity) / 649.0;
-  joint_states.middle.vel = rotorVelToRadPerSec(status->middle_current_or_velocity) / 649.0;
-  joint_states.ring.vel = rotorVelToRadPerSec(status->ring_current_or_velocity) / 649.0;
-  joint_states.pinky.vel = rotorVelToRadPerSec(status->pinky_current_or_velocity) / 649.0;
-  joint_states.thumb2.vel = rotorVelToRadPerSec(status->thumb_flexor_current_or_velocity) / 649.0;
-  joint_states.thumb1.vel = rotorVelToRadPerSec(status->thumb_rotator_current_or_velocity) / 162.45;
+  joint_states.index.vel = rotorVelToRadPerSec(status->v1or2.index_current_or_velocity) / 649.0;
+  joint_states.middle.vel = rotorVelToRadPerSec(status->v1or2.middle_current_or_velocity) / 649.0;
+  joint_states.ring.vel = rotorVelToRadPerSec(status->v1or2.ring_current_or_velocity) / 649.0;
+  joint_states.pinky.vel = rotorVelToRadPerSec(status->v1or2.pinky_current_or_velocity) / 649.0;
+  joint_states.thumb2.vel = rotorVelToRadPerSec(status->v1or2.thumb_flexor_current_or_velocity) / 649.0;
+  joint_states.thumb1.vel = rotorVelToRadPerSec(status->v1or2.thumb_rotator_current_or_velocity) / 162.45;
 
   joint_states.index.eff = 0;
   joint_states.middle.eff = 0;
@@ -133,7 +133,7 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
                   " thumb1: " << joint_states.thumb1.vel <<
                   " thumb2: " << joint_states.thumb2.vel);
 
-  /*auto touch_data = status->unpackTouchSensorData();
+  /*auto touch_data = status->v1or2.unpackTouchSensorData();
   if (!touch_data)
   {
     ROS_ERROR("Failed to unpack touch data");
@@ -156,7 +156,7 @@ void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
   if (received)
   {
     ROS_INFO_STREAM("Sending: " << joint_states.index.cmd << ", " << joint_states.middle.cmd << ", " << joint_states.ring.cmd << ", " << joint_states.pinky.cmd << ", " << joint_states.thumb2.cmd << ", " << joint_states.thumb1.cmd);
-    std::unique_ptr<HandReplyV1or2> status = hand.sendPositionsV2(joint_states.index.cmd, joint_states.middle.cmd, joint_states.ring.cmd, joint_states.pinky.cmd, joint_states.thumb2.cmd, joint_states.thumb1.cmd);
+    std::unique_ptr<HandReply> status = hand.sendPositions(ReplyMode::V2, joint_states.index.cmd, joint_states.middle.cmd, joint_states.ring.cmd, joint_states.pinky.cmd, joint_states.thumb2.cmd, joint_states.thumb1.cmd);
     if (!status)
     {
       ROS_ERROR("Failed to send hand command");

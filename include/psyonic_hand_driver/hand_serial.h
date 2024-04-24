@@ -14,20 +14,40 @@
 namespace psyonic_hand_driver
 {
 
+enum class ControlMode : uint8_t
+{
+  POSITION = 0x10,
+  VELOCITY = 0x20,
+  TORQUE = 0x30,
+  VOLTAGE = 0x40,
+  READ_ONLY = 0xA0
+};
+
+std::string to_string(ControlMode mode);
+
+enum class ReplyMode : uint8_t
+{
+  V1 = 0x00,
+  V2 = 0x01,
+  V3 = 0x02
+};
+
+std::string to_string(ReplyMode mode);
+
 enum class FormatHeader : uint8_t
 {
-  POSITION_MODE_V1 = 0x10,
-  POSITION_MODE_V2 = 0x11,
-  POSITION_MODE_V3 = 0x12,
-  VELOCITY_MODE_V1 = 0x20,
-  VELOCITY_MODE_V2 = 0x21,
-  VELOCITY_MODE_V3 = 0x22,
-  TORQUE_MODE_V1 = 0x30,
-  TORQUE_MODE_V2 = 0x31,
-  TORQUE_MODE_V3 = 0x32,
-  VOLTAGE_MODE_V1 = 0x40,
-  VOLTAGE_MODE_V2 = 0x41,
-  VOLTAGE_MODE_V3 = 0x42,
+  POSITION_MODE_REPLY_V1 = 0x10,
+  POSITION_MODE_REPLY_V2 = 0x11,
+  POSITION_MODE_REPLY_V3 = 0x12,
+  VELOCITY_MODE_REPLY_V1 = 0x20,
+  VELOCITY_MODE_REPLY_V2 = 0x21,
+  VELOCITY_MODE_REPLY_V3 = 0x22,
+  TORQUE_MODE_REPLY_V1 = 0x30,
+  TORQUE_MODE_REPLY_V2 = 0x31,
+  TORQUE_MODE_REPLY_V3 = 0x32,
+  VOLTAGE_MODE_REPLY_V1 = 0x40,
+  VOLTAGE_MODE_REPLY_V2 = 0x41,
+  VOLTAGE_MODE_REPLY_V3 = 0x42,
   READ_ONLY_MODE_REPLY_V1 = 0xA0,
   READ_ONLY_MODE_REPLY_V2 = 0xA1,
   READ_ONLY_MODE_REPLY_V3 = 0xA2,
@@ -38,9 +58,7 @@ enum class FormatHeader : uint8_t
 
 std::string to_string(FormatHeader header);
 
-// Position data: pos = angle_degrees * 32767 / 150
-// Finger velocity = vel_degrees_per_sec * 32767 / 3000
-// Rotor veleocity = vel_rad_per_sec * 4
+FormatHeader operator+(ControlMode control, ReplyMode reply);
 
 struct __attribute__((__packed__)) HandControlCommand
 {
@@ -145,7 +163,6 @@ static constexpr size_t HAND_REPLY_V1OR2_SIZE = 72;
 
 static_assert(sizeof(HandReplyV1or2) == HAND_REPLY_V1OR2_SIZE, "HandReplyV1or2 size is not correct");
 
-// V1: motor current; V2: motor rotor velocity
 struct __attribute__((__packed__)) HandReplyV3
 {
   FormatHeader header;
@@ -175,6 +192,12 @@ static constexpr size_t HAND_REPLY_V3_SIZE = 39;
 
 static_assert(sizeof(HandReplyV3) == HAND_REPLY_V3_SIZE, "HandReplyV3 size is not correct");
 
+union HandReply
+{
+  HandReplyV1or2 v1or2;
+  HandReplyV3 v3;
+};
+
 template<typename T>
 uint8_t computeChecksum(T &msg)
 {
@@ -199,14 +222,12 @@ private:
   template<typename T>
   std::vector<uint8_t> PPP_stuff(const T &msg);
 
-  template<typename T>
-  std::unique_ptr<T> PPP_unstuff(const std::vector<uint8_t> &data);
+  std::unique_ptr<HandReply> PPP_unstuff(const std::vector<uint8_t> &data, size_t expected_size);
 
   template<typename T>
   bool send(T &msg);
 
-  template<typename T>
-  std::unique_ptr<T> receive(const ros::Duration &timeout);
+  std::unique_ptr<HandReply> receive(ReplyMode reply_mode, const ros::Duration &timeout);
 
 public:
   HandSerial();
@@ -214,9 +235,9 @@ public:
 
   bool connect(const std::string &id);
 
-  std::unique_ptr<HandReplyV1or2> queryStatusV2();
+  std::unique_ptr<HandReply> queryStatus(ReplyMode reply_mode);
 
-  std::unique_ptr<HandReplyV1or2> sendPositionsV2(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
+  std::unique_ptr<HandReply> sendPositions(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 };
 
 template<typename T>
@@ -244,59 +265,6 @@ std::vector<uint8_t> HandSerial::PPP_stuff(const T &msg)
 }
 
 template<typename T>
-std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_data)
-{
-  auto res = std::make_unique<T>();
-  uint8_t *ptr = reinterpret_cast<uint8_t*>(res.get());
-  constexpr size_t UNSTUFFED_SIZE = sizeof(T);
-
-  if (stuffed_data.size() < 2)
-  {
-    ROS_ERROR_STREAM("Invalid PPP frame: Too short");
-    return nullptr;
-  }
-  if (stuffed_data[0] != 0x7E || stuffed_data.back() != 0x7E)
-  {
-    ROS_ERROR_STREAM("Invalid PPP frame: Missing start or end flag");
-    return nullptr;
-  }
-
-  size_t read = 0;
-  for (size_t i = 1; i < stuffed_data.size(); i++)
-  {
-    if (stuffed_data[i] == 0x7E)
-    {
-      break;
-    }
-    if (read >= UNSTUFFED_SIZE)
-    {
-      ROS_ERROR_STREAM("Invalid PPP frame; more than " << UNSTUFFED_SIZE << " bytes read");
-      return nullptr;
-    }
-    if (stuffed_data[i] == 0x7D)
-    {
-      i++;
-      if (i >= stuffed_data.size())
-      {
-        ROS_ERROR_STREAM("Invalid PPP frame; more than " << UNSTUFFED_SIZE << " bytes read");
-        return nullptr;
-      }
-      ptr[read++] = stuffed_data[i] ^ 0x20;
-    }
-    else
-    {
-      ptr[read++] = stuffed_data[i];
-    }
-  }
-  if (read != UNSTUFFED_SIZE)
-  {
-    ROS_ERROR_STREAM("Invalid PPP frame; " << read << " bytes read out of " << UNSTUFFED_SIZE << " expected bytes");
-    return nullptr;
-  }
-  return res;
-}
-
-template<typename T>
 bool HandSerial::send(T &msg)
 {
   uint8_t checksum = computeChecksum(msg);
@@ -318,58 +286,6 @@ bool HandSerial::send(T &msg)
     return false;
   }
   return true;
-}
-
-template<typename T>
-std::unique_ptr<T> HandSerial::receive(const ros::Duration &timeout)
-{
-  constexpr size_t MSG_SIZE = sizeof(T);
-  constexpr size_t BUF_SIZE = 2*MSG_SIZE + 2;
-  std::vector<uint8_t> buffer(BUF_SIZE);
-  size_t read_ind = 0;
-  ros::Time start = ros::Time::now();
-  try
-  {
-    while (buffer[0] != 0x7E && ros::Time::now() - start < timeout)
-    {
-      sp.read(buffer.data(), 1);
-    }
-    if (buffer[0] != 0x7E)
-    {
-      ROS_ERROR_STREAM("Failed to find start of PPP frame; read " << read_ind << " bytes");
-      return nullptr;
-    }
-    read_ind = 1;
-    while ((read_ind < 2 || buffer[read_ind - 1] != 0x7E) && ros::Time::now() - start < timeout)
-    {
-      size_t read_bytes = sp.read(buffer.data() + read_ind, BUF_SIZE - read_ind);
-      read_ind += read_bytes;
-    }
-    if (read_ind < 2 || buffer[read_ind - 1] != 0x7E)
-    {
-      ROS_ERROR_STREAM("Failed to find end of PPP frame; read " << read_ind << " bytes");
-      return nullptr;
-    }
-  }
-  catch (const serial::IOException &ex)
-  {
-    ROS_ERROR_STREAM(ex.what());
-    return nullptr;
-  }
-  buffer.resize(read_ind);
-  auto res = PPP_unstuff<T>(buffer);
-  if (!res)
-  {
-    ROS_ERROR("Failed to unstuff PPP frame");
-    return nullptr;
-  }
-  uint8_t checksum = computeChecksum(*res);
-  if (checksum != res->checksum)
-  {
-    ROS_ERROR_STREAM("Checksum mismatch");
-    return nullptr;
-  }
-  return res;
 }
 
 } // namespace psyonic_hand_driver

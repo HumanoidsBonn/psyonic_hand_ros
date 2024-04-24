@@ -7,34 +7,73 @@
 namespace psyonic_hand_driver
 {
 
+FormatHeader operator+(ControlMode control, ReplyMode reply)
+{
+  return static_cast<FormatHeader>(static_cast<uint8_t>(control) + static_cast<uint8_t>(reply));
+}
+
+std::string to_string(ControlMode mode)
+{
+  switch (mode)
+  {
+  case ControlMode::POSITION:
+    return "POSITION";
+  case ControlMode::VELOCITY:
+    return "VELOCITY";
+  case ControlMode::TORQUE:
+    return "TORQUE";
+  case ControlMode::VOLTAGE:
+    return "VOLTAGE";
+  case ControlMode::READ_ONLY:
+    return "READ_ONLY";
+  default:
+    return "Unknown";
+  }
+}
+
+std::string to_string(ReplyMode mode)
+{
+  switch (mode)
+  {
+  case ReplyMode::V1:
+    return "V1";
+  case ReplyMode::V2:
+    return "V2";
+  case ReplyMode::V3:
+    return "V3";
+  default:
+    return "Unknown";
+  }
+}
+
 std::string to_string(FormatHeader header)
 {
   switch (header)
   {
-  case FormatHeader::POSITION_MODE_V1:
-    return "POSITION_MODE_V1";
-  case FormatHeader::POSITION_MODE_V2:
-    return "POSITION_MODE_V2";
-  case FormatHeader::POSITION_MODE_V3:
-    return "POSITION_MODE_V3";
-  case FormatHeader::VELOCITY_MODE_V1:
-    return "VELOCITY_MODE_V1";
-  case FormatHeader::VELOCITY_MODE_V2:
-    return "VELOCITY_MODE_V2";
-  case FormatHeader::VELOCITY_MODE_V3:
-    return "VELOCITY_MODE_V3";
-  case FormatHeader::TORQUE_MODE_V1:
-    return "TORQUE_MODE_V1";
-  case FormatHeader::TORQUE_MODE_V2:
-    return "TORQUE_MODE_V2";
-  case FormatHeader::TORQUE_MODE_V3:
-    return "TORQUE_MODE_V3";
-  case FormatHeader::VOLTAGE_MODE_V1:
-    return "VOLTAGE_MODE_V1";
-  case FormatHeader::VOLTAGE_MODE_V2:
-    return "VOLTAGE_MODE_V2";
-  case FormatHeader::VOLTAGE_MODE_V3:
-    return "VOLTAGE_MODE_V3";
+  case FormatHeader::POSITION_MODE_REPLY_V1:
+    return "POSITION_MODE_REPLY_V1";
+  case FormatHeader::POSITION_MODE_REPLY_V2:
+    return "POSITION_MODE_REPLY_V2";
+  case FormatHeader::POSITION_MODE_REPLY_V3:
+    return "POSITION_MODE_REPLY_V3";
+  case FormatHeader::VELOCITY_MODE_REPLY_V1:
+    return "VELOCITY_MODE_REPLY_V1";
+  case FormatHeader::VELOCITY_MODE_REPLY_V2:
+    return "VELOCITY_MODE_REPLY_V2";
+  case FormatHeader::VELOCITY_MODE_REPLY_V3:
+    return "VELOCITY_MODE_REPLY_V3";
+  case FormatHeader::TORQUE_MODE_REPLY_V1:
+    return "TORQUE_MODE_REPLY_V1";
+  case FormatHeader::TORQUE_MODE_REPLY_V2:
+    return "TORQUE_MODE_REPLY_V2";
+  case FormatHeader::TORQUE_MODE_REPLY_V3:
+    return "TORQUE_MODE_REPLY_V3";
+  case FormatHeader::VOLTAGE_MODE_REPLY_V1:
+    return "VOLTAGE_MODE_REPLY_V1";
+  case FormatHeader::VOLTAGE_MODE_REPLY_V2:
+    return "VOLTAGE_MODE_REPLY_V2";
+  case FormatHeader::VOLTAGE_MODE_REPLY_V3:
+    return "VOLTAGE_MODE_REPLY_V3";
   case FormatHeader::READ_ONLY_MODE_REPLY_V1:
     return "READ_ONLY_MODE_REPLY_V1";
   case FormatHeader::READ_ONLY_MODE_REPLY_V2:
@@ -48,7 +87,7 @@ std::string to_string(FormatHeader header)
   case FormatHeader::EXIT_API_CONTROL_MODE:
     return "EXIT_API_CONTROL_MODE";
   default:
-    return "UNKNOWN: " + static_cast<int>(header);
+    return "Unknown";
   }
 }
 
@@ -154,23 +193,126 @@ bool HandSerial::connect(const std::string &id)
   return true;
 }
 
-std::unique_ptr<HandReplyV1or2> HandSerial::queryStatusV2()
+std::unique_ptr<HandReply> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_data, size_t expected_size)
+{
+  auto res = std::make_unique<HandReply>();
+  uint8_t *ptr = reinterpret_cast<uint8_t*>(res.get());
+
+  if (stuffed_data.size() < 2)
+  {
+    ROS_ERROR_STREAM("Invalid PPP frame: Too short");
+    return nullptr;
+  }
+  if (stuffed_data[0] != 0x7E || stuffed_data.back() != 0x7E)
+  {
+    ROS_ERROR_STREAM("Invalid PPP frame: Missing start or end flag");
+    return nullptr;
+  }
+
+  size_t read = 0;
+  for (size_t i = 1; i < stuffed_data.size(); i++)
+  {
+    if (stuffed_data[i] == 0x7E)
+    {
+      break;
+    }
+    if (read >= expected_size)
+    {
+      ROS_ERROR_STREAM("Invalid PPP frame; more than " << expected_size << " bytes read");
+      return nullptr;
+    }
+    if (stuffed_data[i] == 0x7D)
+    {
+      i++;
+      if (i >= stuffed_data.size())
+      {
+        ROS_ERROR_STREAM("Invalid PPP frame; more than " << expected_size << " bytes read");
+        return nullptr;
+      }
+      ptr[read++] = stuffed_data[i] ^ 0x20;
+    }
+    else
+    {
+      ptr[read++] = stuffed_data[i];
+    }
+  }
+  if (read != expected_size)
+  {
+    ROS_ERROR_STREAM("Invalid PPP frame; " << read << " bytes read out of " << expected_size << " expected bytes");
+    return nullptr;
+  }
+  return res;
+}
+
+std::unique_ptr<HandReply> HandSerial::receive(ReplyMode reply_mode, const ros::Duration &timeout)
+{
+  const size_t MSG_SIZE = (reply_mode == ReplyMode::V3) ? HAND_REPLY_V3_SIZE : HAND_REPLY_V1OR2_SIZE;
+  const size_t BUF_SIZE = 2*MSG_SIZE + 2;
+  std::vector<uint8_t> buffer(BUF_SIZE);
+  size_t read_ind = 0;
+  ros::Time start = ros::Time::now();
+  try
+  {
+    while (buffer[0] != 0x7E && ros::Time::now() - start < timeout)
+    {
+      sp.read(buffer.data(), 1);
+    }
+    if (buffer[0] != 0x7E)
+    {
+      ROS_ERROR_STREAM("Failed to find start of PPP frame; read " << read_ind << " bytes");
+      return nullptr;
+    }
+    read_ind = 1;
+    while ((read_ind < 2 || buffer[read_ind - 1] != 0x7E) && ros::Time::now() - start < timeout)
+    {
+      size_t read_bytes = sp.read(buffer.data() + read_ind, BUF_SIZE - read_ind);
+      read_ind += read_bytes;
+    }
+    if (read_ind < 2 || buffer[read_ind - 1] != 0x7E)
+    {
+      ROS_ERROR_STREAM("Failed to find end of PPP frame; read " << read_ind << " bytes");
+      return nullptr;
+    }
+  }
+  catch (const serial::IOException &ex)
+  {
+    ROS_ERROR_STREAM(ex.what());
+    return nullptr;
+  }
+  buffer.resize(read_ind);
+  auto res = PPP_unstuff(buffer, MSG_SIZE);
+  if (!res)
+  {
+    ROS_ERROR("Failed to unstuff PPP frame");
+    return nullptr;
+  }
+  uint8_t received_checksum = (reply_mode == ReplyMode::V3) ? res->v3.checksum : res->v1or2.checksum;
+  uint8_t computed_checksum = computeChecksum(*res);
+  if (computed_checksum != received_checksum)
+  {
+    ROS_ERROR_STREAM("Checksum mismatch");
+    return nullptr;
+  }
+  return res;
+}
+
+std::unique_ptr<HandReply> HandSerial::queryStatus(ReplyMode reply_mode)
 {
   HandMiscCommand msg;
-  msg.header = FormatHeader::READ_ONLY_MODE_REPLY_V2;
+  msg.header = ControlMode::READ_ONLY + reply_mode;
 
   if (!send(msg))
   {
     return nullptr;
   }
 
-  return receive<HandReplyV1or2>(ros::Duration(0.25));
+  return receive(reply_mode, ros::Duration(0.25));
 }
 
-std::unique_ptr<HandReplyV1or2> HandSerial::sendPositionsV2(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
+std::unique_ptr<HandReply> HandSerial::sendPositions(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
 {
   HandControlCommand msg;
-  msg.header = FormatHeader::POSITION_MODE_V2;
+  msg.header = ControlMode::POSITION + reply_mode;
   msg.index_data = radToPos(index);
   msg.middle_data = radToPos(middle);
   msg.ring_data = radToPos(ring);
@@ -183,7 +325,7 @@ std::unique_ptr<HandReplyV1or2> HandSerial::sendPositionsV2(double index, double
     return nullptr;
   }
 
-  return receive<HandReplyV1or2>(ros::Duration(0.25));
+  return receive(reply_mode, ros::Duration(0.25));
 }
 
 } // namespace psyonic_hand_driver
