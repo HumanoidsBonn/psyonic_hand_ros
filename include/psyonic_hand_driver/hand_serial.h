@@ -178,8 +178,8 @@ uint8_t computeChecksum(T &msg)
 {
   uint8_t checksum = 0;
   uint8_t *ptr = reinterpret_cast<uint8_t*>(&msg);
-  size_t size = sizeof(T) - 1; // exclude checksum field
-  for (size_t i = 0; i < size; i++)
+  constexpr size_t PAYLOAD_SIZE = sizeof(T) - 1; // exclude checksum field
+  for (size_t i = 0; i < PAYLOAD_SIZE; i++)
   {
     checksum += ptr[i];
   }
@@ -223,11 +223,12 @@ public:
 template<typename T>
 std::vector<uint8_t> HandSerial::PPP_stuff(const T &msg)
 {
+  constexpr size_t UNSTUFFED_SIZE = sizeof(T);
   std::vector<uint8_t> data;
+  data.reserve(UNSTUFFED_SIZE * 2 + 2);
   data.push_back(0x7E);
   const uint8_t *ptr = reinterpret_cast<const uint8_t*>(&msg);
-  size_t unstuffed_size = sizeof(msg);
-  for (size_t i = 0; i < unstuffed_size; i++)
+  for (size_t i = 0; i < UNSTUFFED_SIZE; i++)
   {
     if (ptr[i] == 0x7E || ptr[i] == 0x7D)
     {
@@ -248,7 +249,7 @@ std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_d
 {
   auto res = std::make_unique<T>();
   uint8_t *ptr = reinterpret_cast<uint8_t*>(res.get());
-  size_t unstuffed_size = sizeof(T);
+  constexpr size_t UNSTUFFED_SIZE = sizeof(T);
 
   if (stuffed_data.size() < 2 || stuffed_data[0] != 0x7E || stuffed_data.back() != 0x7E)
   {
@@ -263,7 +264,7 @@ std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_d
     {
       break;
     }
-    if (read >= unstuffed_size)
+    if (read >= UNSTUFFED_SIZE)
     {
       ROS_ERROR("Invalid PPP frame");
       return nullptr;
@@ -283,7 +284,7 @@ std::unique_ptr<T> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_d
       ptr[read++] = stuffed_data[i];
     }
   }
-  if (read != unstuffed_size)
+  if (read != UNSTUFFED_SIZE)
   {
     ROS_ERROR("Invalid PPP frame");
     return nullptr;
@@ -318,8 +319,8 @@ bool HandSerial::send(T &msg)
 template<typename T>
 std::unique_ptr<T> HandSerial::receive(const ros::Duration &timeout)
 {
-  size_t MSG_SIZE = sizeof(T);
-  size_t BUF_SIZE = 2*MSG_SIZE + 2;
+  constexpr size_t MSG_SIZE = sizeof(T);
+  constexpr size_t BUF_SIZE = 2*MSG_SIZE + 2;
   std::vector<uint8_t> buffer(BUF_SIZE);
   size_t read_ind = 0;
   ros::Time start = ros::Time::now();
