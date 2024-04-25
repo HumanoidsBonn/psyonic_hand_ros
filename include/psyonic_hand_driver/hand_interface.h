@@ -41,12 +41,12 @@ private:
   hardware_interface::PositionJointInterface jnt_pos_interface;
 
   HandSerial hand;
-
-  ControlMode control_mode = ControlMode::POSITION;
-  ReplyMode reply_mode_request = ReplyMode::V2;
   bool command_received = false;
 
 public:
+  ControlMode control_mode = ControlMode::POSITION;
+  ReplyMode reply_mode_request = ReplyMode::V2;
+
   PsyonicHand();
   virtual ~PsyonicHand();
 

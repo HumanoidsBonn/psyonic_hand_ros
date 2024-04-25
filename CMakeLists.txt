@@ -10,6 +10,7 @@ set (CATKIN_DEPENDENCIES
     hardware_interface
     controller_manager
     serial
+    dynamic_reconfigure
 )
 
 ## Find catkin macros and libraries
@@ -97,6 +98,10 @@ add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 #   cfg/DynReconf1.cfg
 #   cfg/DynReconf2.cfg
 # )
+generate_dynamic_reconfigure_options(
+    cfg/HandInterfaceNode.cfg
+)
+
 
 ###################################
 ## catkin specific configuration ##
@@ -149,7 +154,7 @@ set_target_properties(${PROJECT_NAME}_interface_node PROPERTIES OUTPUT_NAME hand
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_interface_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_interface_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_interface_node ${catkin_LIBRARIES} ${LIBMODBUS_LIBRARIES} simpleble::simpleble)
