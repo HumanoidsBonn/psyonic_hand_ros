@@ -98,6 +98,8 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
     return;
   }
 
+  ROS_INFO_STREAM("Reply header: " << to_string(status->v1or2.header));
+
   joint_states.index.pos = posToRad(status->v1or2.index_position);
   joint_states.middle.pos = posToRad(status->v1or2.middle_position);
   joint_states.ring.pos = posToRad(status->v1or2.ring_position);
@@ -133,20 +135,19 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
                   " thumb1: " << joint_states.thumb1.vel <<
                   " thumb2: " << joint_states.thumb2.vel);
 
-  /*auto touch_data = status->v1or2.unpackTouchSensorData();
-  if (!touch_data)
+  auto touch = status->v1or2.unpackTouchSensorData()->decode();
+  if (!touch)
   {
     ROS_ERROR("Failed to unpack touch data");
   }
   else
   {
-    const auto &touch = touch_data->by_name;
-    ROS_INFO_STREAM("index: " << touch.index_site0 << ", " << touch.index_site1 << ", " << touch.index_site2 << ", " << touch.index_site3 << ", " << touch.index_site4 << ", " << touch.index_site5);
-    ROS_INFO_STREAM("middle: " << touch.middle_site0 << ", " << touch.middle_site1 << ", " << touch.middle_site2 << ", " << touch.middle_site3 << ", " << touch.middle_site4 << ", " << touch.middle_site5);
-    ROS_INFO_STREAM("ring: " << touch.ring_site0 << ", " << touch.ring_site1 << ", " << touch.ring_site2 << ", " << touch.ring_site3 << ", " << touch.ring_site4 << ", " << touch.ring_site5);
-    ROS_INFO_STREAM("pinky: " << touch.pinky_site0 << ", " << touch.pinky_site1 << ", " << touch.pinky_site2 << ", " << touch.pinky_site3 << ", " << touch.pinky_site4 << ", " << touch.pinky_site5);
-    ROS_INFO_STREAM("thumb: " << touch.thumb_site0 << ", " << touch.thumb_site1 << ", " << touch.thumb_site2 << ", " << touch.thumb_site3 << ", " << touch.thumb_site4 << ", " << touch.thumb_site5 << "\n");
-  }*/
+    ROS_INFO_STREAM("index: " << touch->index_site0 << ", " << touch->index_site1 << ", " << touch->index_site2 << ", " << touch->index_site3 << ", " << touch->index_site4 << ", " << touch->index_site5);
+    ROS_INFO_STREAM("middle: " << touch->middle_site0 << ", " << touch->middle_site1 << ", " << touch->middle_site2 << ", " << touch->middle_site3 << ", " << touch->middle_site4 << ", " << touch->middle_site5);
+    ROS_INFO_STREAM("ring: " << touch->ring_site0 << ", " << touch->ring_site1 << ", " << touch->ring_site2 << ", " << touch->ring_site3 << ", " << touch->ring_site4 << ", " << touch->ring_site5);
+    ROS_INFO_STREAM("pinky: " << touch->pinky_site0 << ", " << touch->pinky_site1 << ", " << touch->pinky_site2 << ", " << touch->pinky_site3 << ", " << touch->pinky_site4 << ", " << touch->pinky_site5);
+    ROS_INFO_STREAM("thumb: " << touch->thumb_site0 << ", " << touch->thumb_site1 << ", " << touch->thumb_site2 << ", " << touch->thumb_site3 << ", " << touch->thumb_site4 << ", " << touch->thumb_site5 << "\n");
+  }
 }
 
 void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
@@ -161,6 +162,7 @@ void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
     {
       ROS_ERROR("Failed to send hand command");
     }
+    ROS_INFO_STREAM("Reply header: " << to_string(status->v1or2.header));
     position_control_mode = true; // automatically switch to position control mode if command received
   }
 }
