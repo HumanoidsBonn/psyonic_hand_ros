@@ -95,7 +95,7 @@ bool HandSerial::connect(const std::string &id)
   return true;
 }
 
-std::unique_ptr<HandReply> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_data, size_t expected_size)
+std::unique_ptr<HandReply> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_data)
 {
   auto res = std::make_unique<HandReply>();
   uint8_t *ptr = reinterpret_cast<uint8_t*>(res.get());
@@ -118,9 +118,9 @@ std::unique_ptr<HandReply> HandSerial::PPP_unstuff(const std::vector<uint8_t> &s
     {
       break;
     }
-    if (read >= expected_size)
+    if (read >= HAND_REPLY_SIZE)
     {
-      ROS_ERROR_STREAM("Invalid PPP frame; more than " << expected_size << " bytes read");
+      ROS_ERROR_STREAM("Invalid PPP frame; more than " << HAND_REPLY_SIZE << " bytes read");
       return nullptr;
     }
     if (stuffed_data[i] == 0x7D)
@@ -128,7 +128,7 @@ std::unique_ptr<HandReply> HandSerial::PPP_unstuff(const std::vector<uint8_t> &s
       i++;
       if (i >= stuffed_data.size())
       {
-        ROS_ERROR_STREAM("Invalid PPP frame; more than " << expected_size << " bytes read");
+        ROS_ERROR_STREAM("Invalid PPP frame; more than " << HAND_REPLY_SIZE << " bytes read");
         return nullptr;
       }
       ptr[read++] = stuffed_data[i] ^ 0x20;
@@ -138,18 +138,17 @@ std::unique_ptr<HandReply> HandSerial::PPP_unstuff(const std::vector<uint8_t> &s
       ptr[read++] = stuffed_data[i];
     }
   }
-  if (read != expected_size)
+  if (read != res->expectedSize())
   {
-    ROS_ERROR_STREAM("Invalid PPP frame; " << read << " bytes read out of " << expected_size << " expected bytes");
+    ROS_ERROR_STREAM("Invalid PPP frame; " << read << " bytes read out of " << res->expectedSize() << " expected bytes");
     return nullptr;
   }
   return res;
 }
 
-std::unique_ptr<HandReply> HandSerial::receive(ReplyMode reply_mode, const ros::Duration &timeout)
+std::unique_ptr<HandReply> HandSerial::receive(const ros::Duration &timeout)
 {
-  const size_t MSG_SIZE = (reply_mode == ReplyMode::V3) ? HAND_REPLY_V3_SIZE : HAND_REPLY_V1OR2_SIZE;
-  const size_t BUF_SIZE = 2*MSG_SIZE + 2;
+  constexpr size_t BUF_SIZE = 2*HAND_REPLY_SIZE + 2;
   std::vector<uint8_t> buffer(BUF_SIZE);
   size_t read_ind = 0;
   ros::Time start = ros::Time::now();
@@ -182,15 +181,13 @@ std::unique_ptr<HandReply> HandSerial::receive(ReplyMode reply_mode, const ros::
     return nullptr;
   }
   buffer.resize(read_ind);
-  auto res = PPP_unstuff(buffer, MSG_SIZE);
+  auto res = PPP_unstuff(buffer);
   if (!res)
   {
     ROS_ERROR("Failed to unstuff PPP frame");
     return nullptr;
   }
-  uint8_t received_checksum = (reply_mode == ReplyMode::V3) ? res->v3.checksum : res->v1or2.checksum;
-  uint8_t computed_checksum = computeChecksum(*res);
-  if (computed_checksum != received_checksum)
+  if (res->getChecksum() != res->computeChecksum())
   {
     ROS_ERROR_STREAM("Checksum mismatch");
     return nullptr;
@@ -208,7 +205,7 @@ std::unique_ptr<HandReply> HandSerial::queryStatus(ReplyMode reply_mode)
     return nullptr;
   }
 
-  return receive(reply_mode, ros::Duration(0.25));
+  return receive(ros::Duration(0.25));
 }
 
 std::unique_ptr<HandReply> HandSerial::sendPositions(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
@@ -227,7 +224,7 @@ std::unique_ptr<HandReply> HandSerial::sendPositions(ReplyMode reply_mode, doubl
     return nullptr;
   }
 
-  return receive(reply_mode, ros::Duration(0.25));
+  return receive(ros::Duration(0.25));
 }
 
 } // namespace psyonic_hand_driver

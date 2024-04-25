@@ -9,6 +9,8 @@
 namespace psyonic_hand_driver
 {
 
+uint8_t _computeChecksum(const uint8_t *ptr, const size_t size);
+
 enum class ControlMode : uint8_t
 {
   POSITION = 0x10,
@@ -53,9 +55,17 @@ enum class FormatHeader : uint8_t
 
 std::string to_string(FormatHeader header);
 
-FormatHeader operator+(ControlMode control, ReplyMode reply);
+static inline FormatHeader operator+(ControlMode control, ReplyMode reply)
+{
+  return static_cast<FormatHeader>(static_cast<uint8_t>(control) + static_cast<uint8_t>(reply));
+}
 
-ReplyMode getReplyMode(FormatHeader header);
+static inline ReplyMode getReplyMode(FormatHeader header)
+{
+  return static_cast<ReplyMode>(static_cast<uint8_t>(header) & 0x03);
+}
+
+static constexpr size_t HAND_CONTROL_COMMAND_SIZE = 15;
 
 struct __attribute__((__packed__)) HandControlCommand
 {
@@ -68,20 +78,28 @@ struct __attribute__((__packed__)) HandControlCommand
   int16_t thumb_flexor_data;
   int16_t thumb_rotator_data;
   uint8_t checksum;
+
+  uint8_t computeChecksum() const
+  {
+    return _computeChecksum(reinterpret_cast<const uint8_t*>(this), HAND_CONTROL_COMMAND_SIZE - 1);
+  }
 };
 
-static constexpr size_t HAND_CONTROL_COMMAND_SIZE = 15;
-
 static_assert(sizeof(HandControlCommand) == HAND_CONTROL_COMMAND_SIZE, "HandControlCommand size is not correct");
+
+static constexpr size_t HAND_MISC_COMMAND_SIZE = 3;
 
 struct __attribute__((__packed__)) HandMiscCommand
 {
   uint8_t slave_address = 0x50;
   FormatHeader header;
   uint8_t checksum;
-};
 
-static constexpr size_t HAND_MISC_COMMAND_SIZE = 3;
+  uint8_t computeChecksum() const
+  {
+    return _computeChecksum(reinterpret_cast<const uint8_t*>(this), HAND_MISC_COMMAND_SIZE - 1);
+  }
+};
 
 static_assert(sizeof(HandMiscCommand) == HAND_MISC_COMMAND_SIZE, "HandMiscCommand size is not correct");
 
@@ -184,21 +202,26 @@ struct UnpackedTouchSensorData
 
 static_assert(sizeof(UnpackedTouchSensorData) == TOUCH_SENSOR_DATA_SIZE, "TouchSensorData size is not correct");
 
-struct DecodedHandReplyV1
+// V1: torque, V2: velocity
+struct DecodedHandReplyV1or2
 {
   double index_position;
-  double index_torque;
+  double index_torque_or_velocity;
   double middle_position;
-  double middle_torque;
+  double middle_torque_or_velocity;
   double ring_position;
-  double ring_torque;
+  double ring_torque_or_velocity;
   double pinky_position;
-  double pinky_torque;
+  double pinky_torque_or_velocity;
   double thumb_flexor_position;
-  double thumb_flexor_torque;
+  double thumb_flexor_torque_or_velocity;
   double thumb_rotator_position;
-  double thumb_rotator_torque;
+  double thumb_rotator_torque_or_velocity;
+  std::unique_ptr<DecodedTouchSensorData> touch_sensor_data;
+  uint8_t hot_cold_status;
 };
+
+static constexpr size_t HAND_REPLY_V1OR2_SIZE = 72;
 
 // V1: motor current; V2: motor rotor velocity
 struct __attribute__((__packed__)) HandReplyV1or2
@@ -221,11 +244,41 @@ struct __attribute__((__packed__)) HandReplyV1or2
   uint8_t checksum;
 
   std::unique_ptr<UnpackedTouchSensorData> unpackTouchSensorData() const;
+
+  std::unique_ptr<DecodedHandReplyV1or2> decode() const;
+
+  uint8_t computeChecksum() const
+  {
+    return _computeChecksum(reinterpret_cast<const uint8_t*>(this), HAND_REPLY_V1OR2_SIZE - 1);
+  }
 };
 
-static constexpr size_t HAND_REPLY_V1OR2_SIZE = 72;
-
 static_assert(sizeof(HandReplyV1or2) == HAND_REPLY_V1OR2_SIZE, "HandReplyV1or2 size is not correct");
+
+struct DecodedHandReplyV3
+{
+  double index_position;
+  double index_torque;
+  double middle_position;
+  double middle_torque;
+  double ring_position;
+  double ring_torque;
+  double pinky_position;
+  double pinky_torque;
+  double thumb_flexor_position;
+  double thumb_flexor_torque;
+  double thumb_rotator_position;
+  double thumb_rotator_torque;
+  double index_velocity;
+  double middle_velocity;
+  double ring_velocity;
+  double pinky_velocity;
+  double thumb_flexor_velocity;
+  double thumb_rotator_velocity;
+  uint8_t hot_cold_status;
+};
+
+static constexpr size_t HAND_REPLY_V3_SIZE = 39;
 
 struct __attribute__((__packed__)) HandReplyV3
 {
@@ -250,29 +303,83 @@ struct __attribute__((__packed__)) HandReplyV3
   int16_t thumb_rotator_velocity;
   uint8_t hot_cold_status;
   uint8_t checksum;
+
+  std::unique_ptr<DecodedHandReplyV3> decode() const;
+
+  uint8_t computeChecksum() const
+  {
+    return _computeChecksum(reinterpret_cast<const uint8_t*>(this), HAND_REPLY_V3_SIZE - 1);
+  }
 };
 
-static constexpr size_t HAND_REPLY_V3_SIZE = 39;
-
 static_assert(sizeof(HandReplyV3) == HAND_REPLY_V3_SIZE, "HandReplyV3 size is not correct");
+
+static inline size_t getExpectedSize(ReplyMode reply)
+{
+  switch (reply)
+  {
+  case ReplyMode::V1:
+    return HAND_REPLY_V1OR2_SIZE;
+  case ReplyMode::V2:
+    return HAND_REPLY_V1OR2_SIZE;
+  case ReplyMode::V3:
+    return HAND_REPLY_V3_SIZE;
+  default:
+    return 0;
+  }
+}
+
+static inline size_t getExpectedSize(FormatHeader header)
+{
+  return getExpectedSize(getReplyMode(header));
+}
 
 union HandReply
 {
   HandReplyV1or2 v1or2;
   HandReplyV3 v3;
+
+  ReplyMode replyMode() const
+  {
+    return getReplyMode(v1or2.header);
+  }
+
+  size_t expectedSize() const
+  {
+    return getExpectedSize(v1or2.header);
+  }
+
+  uint8_t getChecksum() const
+  {
+    switch(replyMode())
+    {
+      case ReplyMode::V1:
+      case ReplyMode::V2:
+        return v1or2.checksum;
+      case ReplyMode::V3:
+        return v3.checksum;
+      default:
+        return 0;
+    }
+  }
+
+  uint8_t computeChecksum() const
+  {
+    switch(replyMode())
+    {
+      case ReplyMode::V1:
+      case ReplyMode::V2:
+        return v1or2.computeChecksum();
+      case ReplyMode::V3:
+        return v3.computeChecksum();
+      default:
+        return 0;
+    }
+  }
 };
 
-template<typename T>
-uint8_t computeChecksum(T &msg)
-{
-  uint8_t checksum = 0;
-  uint8_t *ptr = reinterpret_cast<uint8_t*>(&msg);
-  constexpr size_t PAYLOAD_SIZE = sizeof(T) - 1; // exclude checksum field
-  for (size_t i = 0; i < PAYLOAD_SIZE; i++)
-  {
-    checksum += ptr[i];
-  }
-  return ~checksum + 1;
-}
+static constexpr size_t HAND_REPLY_SIZE = std::max(HAND_REPLY_V1OR2_SIZE, HAND_REPLY_V3_SIZE);
+
+static_assert(sizeof(HandReply) == HAND_REPLY_SIZE, "HandReply size is not correct");
 
 } // namespace psyonic_hand_driver

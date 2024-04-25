@@ -81,4 +81,10 @@ static inline int16_t dutyCycleToVoltage(double duty_cycle)
   return safeCast(duty_cycle * 3546.0);
 }
 
+static inline double currentToTorque(int16_t current)
+{
+  constexpr double C = 620.606079; // this could be read via bluetooth
+  return static_cast<double>(current) / C * 1.49 / 1000.0;
+}
+
 } // namespace psyonic_hand_driver

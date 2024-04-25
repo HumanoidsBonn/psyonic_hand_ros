@@ -26,12 +26,12 @@ private:
   template<typename T>
   std::vector<uint8_t> PPP_stuff(const T &msg);
 
-  std::unique_ptr<HandReply> PPP_unstuff(const std::vector<uint8_t> &data, size_t expected_size);
+  std::unique_ptr<HandReply> PPP_unstuff(const std::vector<uint8_t> &data);
 
   template<typename T>
   bool send(T &msg);
 
-  std::unique_ptr<HandReply> receive(ReplyMode reply_mode, const ros::Duration &timeout);
+  std::unique_ptr<HandReply> receive(const ros::Duration &timeout);
 
 public:
   HandSerial();
@@ -71,8 +71,7 @@ std::vector<uint8_t> HandSerial::PPP_stuff(const T &msg)
 template<typename T>
 bool HandSerial::send(T &msg)
 {
-  uint8_t checksum = computeChecksum(msg);
-  msg.checksum = checksum;
+  msg.checksum = msg.computeChecksum();
   std::vector<uint8_t> data = PPP_stuff(msg);
   size_t written = 0;
   try

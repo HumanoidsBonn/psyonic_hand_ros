@@ -11,9 +11,9 @@ namespace psyonic_hand_driver
 
 struct JointState
 {
-  double pos;
-  double vel;
-  double eff;
+  double pos = 0;
+  double vel = 0;
+  double eff = 0;
   double cmd = std::numeric_limits<double>::quiet_NaN();
   double last_cmd = std::numeric_limits<double>::quiet_NaN();
 };
@@ -42,7 +42,9 @@ private:
 
   HandSerial hand;
 
-  bool position_control_mode = false;
+  ControlMode control_mode = ControlMode::POSITION;
+  ReplyMode reply_mode_request = ReplyMode::V2;
+  bool command_received = false;
 
 public:
   PsyonicHand();
@@ -55,6 +57,19 @@ public:
    * \return true if a command has been received
    */
   bool commandReceived();
+
+  /**
+   * \brief Send command, depending on control mode
+   *
+   * \return Reply from the hand, or nullptr if an error occurred
+   */
+  std::unique_ptr<HandReply> sendCommand();
+
+  /** \brief Update joint states from a hand reply. Automatically detects the reply mode.
+   *
+   * \param reply The hand reply
+   */
+  void updateJointStates(const HandReply& reply);
 
   /** \brief Read data from the robot hardware.
    *
