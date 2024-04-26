@@ -1,0 +1,17 @@
+<library path="lib/librqt_psyonic_hand">
+  <class name="rqt_psyonic_hand/PsyonicHandRqtPlugin" type="rqt_psyonic_hand::PsyonicHandRqtPlugin" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      A plugin to control the psyonic hand.
+    </description>
+    <qtgui>
+      <group>
+        <label>Robot Tools</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to robot tools.</statustip>
+      </group>
+      <label>Psyonic Hand</label>
+      <icon type="theme">input-gaming</icon>
+      <statustip>A plugin to control the psyonic hand.</statustip>
+    </qtgui>
+  </class>
+</library>
