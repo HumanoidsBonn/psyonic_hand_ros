@@ -8,50 +8,51 @@ namespace psyonic_hand_driver
 PsyonicHand::PsyonicHand()
 {
   // connect and register the joint state interface
-  hardware_interface::JointStateHandle state_handle_index("index_joint", &joint_states.index.pos, &joint_states.index.vel, &joint_states.index.eff);
-  jnt_state_interface.registerHandle(state_handle_index);
-
-  hardware_interface::JointStateHandle state_handle_middle("middle_joint", &joint_states.middle.pos, &joint_states.middle.vel, &joint_states.middle.eff);
-  jnt_state_interface.registerHandle(state_handle_middle);
-
-  hardware_interface::JointStateHandle state_handle_ring("ring_joint", &joint_states.ring.pos, &joint_states.ring.vel, &joint_states.ring.eff);
-  jnt_state_interface.registerHandle(state_handle_ring);
-
-  hardware_interface::JointStateHandle state_handle_pinky("pinky_joint", &joint_states.pinky.pos, &joint_states.pinky.vel, &joint_states.pinky.eff);
-  jnt_state_interface.registerHandle(state_handle_pinky);
-
-  hardware_interface::JointStateHandle state_handle_thumb1("thumb1_joint", &joint_states.thumb1.pos, &joint_states.thumb1.vel, &joint_states.thumb1.eff);
-  jnt_state_interface.registerHandle(state_handle_thumb1);
-
-  hardware_interface::JointStateHandle state_handle_thumb2("thumb2_joint", &joint_states.thumb2.pos, &joint_states.thumb2.vel, &joint_states.thumb2.eff);
-  jnt_state_interface.registerHandle(state_handle_thumb2);
+  for (size_t i = 0; i < NUM_HAND_JOINTS; i++)
+  {
+    hardware_interface::JointStateHandle state_handle(JOINT_NAMES[i], &joint_states[i].pos, &joint_states[i].vel, &joint_states[i].eff);
+    jnt_state_interface.registerHandle(state_handle);
+  }
 
   registerInterface(&jnt_state_interface);
 
-  // connect and register the joint position interface
-  hardware_interface::JointHandle pos_handle_index(jnt_state_interface.getHandle("index_joint"), &joint_states.index.cmd);
-  jnt_pos_interface.registerHandle(pos_handle_index);
-
-  hardware_interface::JointHandle pos_handle_middle(jnt_state_interface.getHandle("middle_joint"), &joint_states.middle.cmd);
-  jnt_pos_interface.registerHandle(pos_handle_middle);
-
-  hardware_interface::JointHandle pos_handle_ring(jnt_state_interface.getHandle("ring_joint"), &joint_states.ring.cmd);
-  jnt_pos_interface.registerHandle(pos_handle_ring);
-
-  hardware_interface::JointHandle pos_handle_pinky(jnt_state_interface.getHandle("pinky_joint"), &joint_states.pinky.cmd);
-  jnt_pos_interface.registerHandle(pos_handle_pinky);
-
-  hardware_interface::JointHandle pos_handle_thumb2(jnt_state_interface.getHandle("thumb1_joint"), &joint_states.thumb1.cmd);
-  jnt_pos_interface.registerHandle(pos_handle_thumb2);
-
-  hardware_interface::JointHandle pos_handle_thumb1(jnt_state_interface.getHandle("thumb2_joint"), &joint_states.thumb2.cmd);
-  jnt_pos_interface.registerHandle(pos_handle_thumb1);
+  for (size_t i = 0; i < NUM_HAND_JOINTS; i++)
+  {
+    hardware_interface::JointHandle pos_handle(jnt_state_interface.getHandle(JOINT_NAMES[i]), &joint_states[i].cmd_pos);
+    jnt_pos_interface.registerHandle(pos_handle);
+    hardware_interface::JointHandle vel_handle(jnt_state_interface.getHandle(JOINT_NAMES[i]), &joint_states[i].cmd_vel);
+    jnt_vel_interface.registerHandle(vel_handle);
+    hardware_interface::JointHandle eff_handle(jnt_state_interface.getHandle(JOINT_NAMES[i]), &joint_states[i].cmd_eff);
+    jnt_eff_interface.registerHandle(eff_handle);
+  }
 
   registerInterface(&jnt_pos_interface);
+  registerInterface(&jnt_vel_interface);
+  registerInterface(&jnt_eff_interface);
 }
 
 PsyonicHand::~PsyonicHand()
 {
+}
+
+bool PsyonicHand::setControlMode(ControlMode mode)
+{
+  if (mode == ControlMode::POSITION || mode == ControlMode::VELOCITY || mode == ControlMode::TORQUE || mode == ControlMode::VOLTAGE || mode == ControlMode::READ_ONLY)
+  {
+    control_mode = mode;
+    return true;
+  }
+  return false;
+}
+
+bool PsyonicHand::setReplyMode(ReplyMode mode)
+{
+  if (mode == ReplyMode::V1 || mode == ReplyMode::V2 || mode == ReplyMode::V3)
+  {
+    reply_mode_request = mode;
+    return true;
+  }
+  return false;
 }
 
 bool PsyonicHand::connect(const std::string& device)
@@ -59,31 +60,16 @@ bool PsyonicHand::connect(const std::string& device)
   return hand.connect(device);
 }
 
-bool PsyonicHand::commandReceived()
-{
-  JointState *joint_states_ptr = reinterpret_cast<JointState*>(&joint_states);
-  bool received = false;
-  for (size_t i = 0; i < NUM_HAND_JOINTS; i++)
-  {
-    if (std::isnan(joint_states_ptr[i].cmd)) // set to current position
-    {
-      joint_states_ptr[i].cmd = joint_states_ptr[i].pos;
-    }
-    else if (joint_states_ptr[i].cmd != joint_states_ptr[i].last_cmd)
-    {
-      joint_states_ptr[i].last_cmd = joint_states_ptr[i].cmd;
-      received = true;
-    }
-  }
-  return received;
-}
-
 std::unique_ptr<HandReply> PsyonicHand::sendCommand()
 {
   switch (control_mode)
   {
   case ControlMode::POSITION:
-    return hand.sendPositions(reply_mode_request, joint_states.index.cmd, joint_states.middle.cmd, joint_states.ring.cmd, joint_states.pinky.cmd, joint_states.thumb2.cmd, joint_states.thumb1.cmd);
+    return hand.sendPositions(reply_mode_request, joint_states.index.cmd_pos, joint_states.middle.cmd_pos, joint_states.ring.cmd_pos, joint_states.pinky.cmd_pos, joint_states.thumb2.cmd_pos, joint_states.thumb1.cmd_pos);
+  case ControlMode::VELOCITY:
+    return hand.sendVelocities(reply_mode_request, joint_states.index.cmd_vel, joint_states.middle.cmd_vel, joint_states.ring.cmd_vel, joint_states.pinky.cmd_vel, joint_states.thumb2.cmd_vel, joint_states.thumb1.cmd_vel);
+  case ControlMode::TORQUE:
+    return hand.sendTorque(reply_mode_request, joint_states.index.cmd_eff, joint_states.middle.cmd_eff, joint_states.ring.cmd_eff, joint_states.pinky.cmd_eff, joint_states.thumb2.cmd_eff, joint_states.thumb1.cmd_eff);
   case ControlMode::READ_ONLY:
     return hand.queryStatus(reply_mode_request);
   default:
@@ -152,16 +138,7 @@ void PsyonicHand::updateJointStates(const HandReply& reply)
 
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
-  std::unique_ptr<HandReply> status;
-  if (!command_received)
-  {
-    ROS_INFO_STREAM("No command received, using read only mode");
-    status = hand.queryStatus(reply_mode_request);
-  }
-  else
-  {
-    status = sendCommand();
-  }
+  std::unique_ptr<HandReply> status = sendCommand();
 
   if (!status)
   {
@@ -172,6 +149,14 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
   ROS_INFO_STREAM("Reply header: " << to_string(status->v1or2.header));
 
   updateJointStates(*status);
+
+  if (control_mode == ControlMode::READ_ONLY)
+  {
+    for (size_t i = 0; i < NUM_HAND_JOINTS; i++)
+    {
+      joint_states[i].cmd_pos = joint_states[i].pos;
+    }
+  }
 
   ROS_INFO_STREAM("pos: index: " << joint_states.index.pos <<
                   " middle: " << joint_states.middle.pos <<
@@ -211,20 +196,13 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 
 void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
 {
-  bool received = commandReceived();
-  ROS_INFO_STREAM("Received command: " << received);
-  if (received)
+  std::unique_ptr<HandReply> status = sendCommand();
+  if (!status)
   {
-    ROS_INFO_STREAM("Sending: " << joint_states.index.cmd << ", " << joint_states.middle.cmd << ", " << joint_states.ring.cmd << ", " << joint_states.pinky.cmd << ", " << joint_states.thumb2.cmd << ", " << joint_states.thumb1.cmd);
-    std::unique_ptr<HandReply> status = sendCommand();
-    if (!status)
-    {
-      ROS_ERROR("Failed to send hand command");
-      return;
-    }
-    updateJointStates(*status);
-    command_received = true;
+    ROS_ERROR("Failed to send hand command");
+    return;
   }
+  updateJointStates(*status);
 }
 
 } // namespace psyonic_hand_driver

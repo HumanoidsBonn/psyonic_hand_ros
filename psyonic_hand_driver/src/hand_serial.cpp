@@ -227,4 +227,61 @@ std::unique_ptr<HandReply> HandSerial::sendPositions(ReplyMode reply_mode, doubl
   return receive(ros::Duration(0.25));
 }
 
+std::unique_ptr<HandReply> HandSerial::sendVelocities(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
+{
+  HandControlCommand msg;
+  msg.header = ControlMode::VELOCITY + reply_mode;
+  msg.index_data = radPerSecToFingerVel(index);
+  msg.middle_data = radPerSecToFingerVel(middle);
+  msg.ring_data = radPerSecToFingerVel(ring);
+  msg.pinky_data = radPerSecToFingerVel(pinky);
+  msg.thumb_flexor_data = radPerSecToFingerVel(thumb_flexor);
+  msg.thumb_rotator_data = radPerSecToFingerVel(thumb_rotator);
+
+  if (!send(msg))
+  {
+    return nullptr;
+  }
+
+  return receive(ros::Duration(0.25));
+}
+
+std::unique_ptr<HandReply> HandSerial::sendTorque(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
+{
+  HandControlCommand msg;
+  msg.header = ControlMode::TORQUE + reply_mode;
+  msg.index_data = torqueToCurrent(index);
+  msg.middle_data = torqueToCurrent(middle);
+  msg.ring_data = torqueToCurrent(ring);
+  msg.pinky_data = torqueToCurrent(pinky);
+  msg.thumb_flexor_data = torqueToCurrent(thumb_flexor);
+  msg.thumb_rotator_data = torqueToCurrent(thumb_rotator);
+
+  if (!send(msg))
+  {
+    return nullptr;
+  }
+
+  return receive(ros::Duration(0.25));
+}
+
+std::unique_ptr<HandReply> HandSerial::sendVoltage(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
+{
+  HandControlCommand msg;
+  msg.header = ControlMode::VOLTAGE + reply_mode;
+  msg.index_data = dutyCycleToVoltage(index);
+  msg.middle_data = dutyCycleToVoltage(middle);
+  msg.ring_data = dutyCycleToVoltage(ring);
+  msg.pinky_data = dutyCycleToVoltage(pinky);
+  msg.thumb_flexor_data = dutyCycleToVoltage(thumb_flexor);
+  msg.thumb_rotator_data = dutyCycleToVoltage(thumb_rotator);
+
+  if (!send(msg))
+  {
+    return nullptr;
+  }
+
+  return receive(ros::Duration(0.25));
+}
+
 } // namespace psyonic_hand_driver

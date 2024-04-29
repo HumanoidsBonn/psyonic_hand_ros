@@ -14,8 +14,9 @@ struct JointState
   double pos = 0;
   double vel = 0;
   double eff = 0;
-  double cmd = std::numeric_limits<double>::quiet_NaN();
-  double last_cmd = std::numeric_limits<double>::quiet_NaN();
+  double cmd_pos = 0;
+  double cmd_vel = 0;
+  double cmd_eff = 0;
 };
 
 struct HandJointStates
@@ -26,9 +27,28 @@ struct HandJointStates
   JointState pinky;
   JointState thumb1;
   JointState thumb2;
+
+  JointState& operator[](size_t i)
+  {
+    return *(&index + i);
+  }
+
+  const JointState& operator[](size_t i) const
+  {
+    return *(&index + i);
+  }
 };
 
 static constexpr size_t NUM_HAND_JOINTS = 6;
+
+static constexpr std::array<const char*, NUM_HAND_JOINTS> JOINT_NAMES = {
+  "index_joint",
+  "middle_joint",
+  "ring_joint",
+  "pinky_joint",
+  "thumb1_joint",
+  "thumb2_joint"
+};
 
 static_assert(sizeof(HandJointStates) == NUM_HAND_JOINTS * sizeof(JointState), "HandJointStates size is not correct");
 
@@ -39,24 +59,26 @@ private:
 
   hardware_interface::JointStateInterface jnt_state_interface;
   hardware_interface::PositionJointInterface jnt_pos_interface;
+  hardware_interface::VelocityJointInterface jnt_vel_interface;
+  hardware_interface::EffortJointInterface jnt_eff_interface;
 
   HandSerial hand;
   bool command_received = false;
 
 public:
-  ControlMode control_mode = ControlMode::POSITION;
-  ReplyMode reply_mode_request = ReplyMode::V2;
+  ControlMode control_mode = ControlMode::READ_ONLY;
+  ReplyMode reply_mode_request = ReplyMode::V3;
 
   PsyonicHand();
   virtual ~PsyonicHand();
 
-  bool connect(const std::string& device);
+  ControlMode getControlMode() const { return control_mode; }
+  ReplyMode getReplyMode() const { return reply_mode_request; }
 
-  /** \brief Check if a command has been received, adjust if necessary
-   *
-   * \return true if a command has been received
-   */
-  bool commandReceived();
+  bool setControlMode(ControlMode mode);
+  bool setReplyMode(ReplyMode mode);
+
+  bool connect(const std::string& device);
 
   /**
    * \brief Send command, depending on control mode

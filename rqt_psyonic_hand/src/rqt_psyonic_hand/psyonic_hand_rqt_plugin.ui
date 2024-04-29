@@ -6,29 +6,108 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>579</width>
-    <height>281</height>
+    <width>363</width>
+    <height>891</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="psyonicHandRqtPluginGridLayout">
+  <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
+    <widget class="QGroupBox" name="controlModeGroupBox">
+     <property name="title">
+      <string>Control Mode</string>
+     </property>
+     <layout class="QGridLayout" name="controlModeGridLayout">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="controlPositionRadioButton">
+        <property name="text">
+         <string>Position</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="controlVelocityRadioButton">
+        <property name="text">
+         <string>Velocity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="controlTorqueRadioButton">
+        <property name="text">
+         <string>Torque</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QRadioButton" name="controlReadOnlyRadioButton">
+        <property name="text">
+         <string>Read Only</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QGroupBox" name="replyModeGroupBox">
+     <property name="title">
+      <string>Reply Mode</string>
+     </property>
+     <layout class="QGridLayout" name="replyModeGridLayout">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="replyV1RadioButton">
+        <property name="text">
+         <string>V1</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="replyV2RadioButton">
+        <property name="text">
+         <string>V2</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="replyV3RadioButton">
+        <property name="text">
+         <string>V3</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0">
     <widget class="QGroupBox" name="jointPositionCommandGroupBox">
      <property name="title">
       <string>Joint position commands</string>
      </property>
      <layout class="QGridLayout" name="jointPositionCommandGroupBoxGridLayout">
       <item row="0" column="0">
-       <widget class="QLabel" name="indexJointPositionLabel">
+       <widget class="QLabel" name="indexPositionLabel">
         <property name="text">
          <string>Index:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QSlider" name="indexJointPositionSlider">
+       <widget class="QSlider" name="indexPositionSlider">
         <property name="maximum">
          <number>120</number>
         </property>
@@ -41,7 +120,7 @@
        </widget>
       </item>
       <item row="0" column="2">
-       <widget class="QDoubleSpinBox" name="indexJointPostionSpinBox">
+       <widget class="QDoubleSpinBox" name="indexPostionSpinBox">
         <property name="decimals">
          <number>1</number>
         </property>
@@ -57,14 +136,14 @@
        </widget>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="middleJointPositionLabel">
+       <widget class="QLabel" name="middlePositionLabel">
         <property name="text">
          <string>Middle:</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QSlider" name="middleJointPositionSlider">
+       <widget class="QSlider" name="middlePositionSlider">
         <property name="maximum">
          <number>120</number>
         </property>
@@ -77,7 +156,7 @@
        </widget>
       </item>
       <item row="1" column="2">
-       <widget class="QDoubleSpinBox" name="middleJointPostionSpinBox">
+       <widget class="QDoubleSpinBox" name="middlePostionSpinBox">
         <property name="decimals">
          <number>1</number>
         </property>
@@ -93,14 +172,14 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QLabel" name="ringJointPositionLabel">
+       <widget class="QLabel" name="ringPositionLabel">
         <property name="text">
          <string>Ring:</string>
         </property>
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QSlider" name="ringJointPositionSlider">
+       <widget class="QSlider" name="ringPositionSlider">
         <property name="maximum">
          <number>120</number>
         </property>
@@ -113,7 +192,7 @@
        </widget>
       </item>
       <item row="2" column="2">
-       <widget class="QDoubleSpinBox" name="ringJointPostionSpinBox">
+       <widget class="QDoubleSpinBox" name="ringPostionSpinBox">
         <property name="decimals">
          <number>1</number>
         </property>
@@ -129,14 +208,14 @@
        </widget>
       </item>
       <item row="3" column="0">
-       <widget class="QLabel" name="pinkyJointPositionLabel">
+       <widget class="QLabel" name="pinkyPositionLabel">
         <property name="text">
          <string>Pinky:</string>
         </property>
        </widget>
       </item>
       <item row="3" column="1">
-       <widget class="QSlider" name="pinkyJointPositionSlider">
+       <widget class="QSlider" name="pinkyPositionSlider">
         <property name="maximum">
          <number>120</number>
         </property>
@@ -149,7 +228,7 @@
        </widget>
       </item>
       <item row="3" column="2">
-       <widget class="QDoubleSpinBox" name="pinkyJointPostionSpinBox">
+       <widget class="QDoubleSpinBox" name="pinkyPostionSpinBox">
         <property name="decimals">
          <number>1</number>
         </property>
@@ -165,14 +244,14 @@
        </widget>
       </item>
       <item row="4" column="0">
-       <widget class="QLabel" name="thumb1JointPositionLabel">
+       <widget class="QLabel" name="thumb1PositionLabel">
         <property name="text">
          <string>Thumb 1:</string>
         </property>
        </widget>
       </item>
       <item row="4" column="1">
-       <widget class="QSlider" name="thumb1JointPositionSlider">
+       <widget class="QSlider" name="thumb1PositionSlider">
         <property name="minimum">
          <number>-120</number>
         </property>
@@ -188,7 +267,7 @@
        </widget>
       </item>
       <item row="4" column="2">
-       <widget class="QDoubleSpinBox" name="thumb1JointPostionSpinBox">
+       <widget class="QDoubleSpinBox" name="thumb1PostionSpinBox">
         <property name="decimals">
          <number>1</number>
         </property>
@@ -207,14 +286,14 @@
        </widget>
       </item>
       <item row="5" column="0">
-       <widget class="QLabel" name="thumb2JointPositionLabel">
+       <widget class="QLabel" name="thumb2PositionLabel">
         <property name="text">
          <string>Thumb 2:</string>
         </property>
        </widget>
       </item>
       <item row="5" column="1">
-       <widget class="QSlider" name="thumb2JointPositionSlider">
+       <widget class="QSlider" name="thumb2PositionSlider">
         <property name="maximum">
          <number>120</number>
         </property>
@@ -227,7 +306,7 @@
        </widget>
       </item>
       <item row="5" column="2">
-       <widget class="QDoubleSpinBox" name="thumb2JointPostionSpinBox">
+       <widget class="QDoubleSpinBox" name="thumb2PostionSpinBox">
         <property name="decimals">
          <number>1</number>
         </property>
@@ -239,6 +318,528 @@
         </property>
         <property name="value">
          <double>40.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QGroupBox" name="jointVelocityCommandGroupBox">
+     <property name="title">
+      <string>Joint velocity commands</string>
+     </property>
+     <layout class="QGridLayout" name="jointVelocityCommandGroupBoxGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="indexVelocityLabel">
+        <property name="text">
+         <string>Index:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSlider" name="indexVelocitySlider">
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QDoubleSpinBox" name="indexVelocitySpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="middleVelocityLabel">
+        <property name="text">
+         <string>Middle:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="middleVelocitySlider">
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="middleVelocitySpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="ringVelocityLabel">
+        <property name="text">
+         <string>Ring:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="ringVelocitySlider">
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="ringVelocitySpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="pinkyVelocityLabel">
+        <property name="text">
+         <string>Pinky:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSlider" name="pinkyVelocitySlider">
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QDoubleSpinBox" name="pinkyVelocitySpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="thumb1VelocityLabel">
+        <property name="text">
+         <string>Thumb 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSlider" name="thumb1VelocitySlider">
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QDoubleSpinBox" name="thumb1VelocitySpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="thumb2VelocityLabel">
+        <property name="text">
+         <string>Thumb 2:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSlider" name="thumb2VelocitySlider">
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QDoubleSpinBox" name="thumb2VelocitySpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QGroupBox" name="jointEffortCommandGroupBox">
+     <property name="title">
+      <string>Joint effort commands</string>
+     </property>
+     <layout class="QGridLayout" name="jointEffortCommandGroupBoxGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="indexEffortLabel">
+        <property name="text">
+         <string>Index:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSlider" name="indexEffortSlider">
+        <property name="minimum">
+         <number>-60</number>
+        </property>
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QDoubleSpinBox" name="indexEffortSpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="middleEffortLabel">
+        <property name="text">
+         <string>Middle:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="middleEffortSlider">
+        <property name="minimum">
+         <number>-60</number>
+        </property>
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="middleEffortSpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="ringEffortLabel">
+        <property name="text">
+         <string>Ring:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="ringEffortSlider">
+        <property name="minimum">
+         <number>-60</number>
+        </property>
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="ringEffortSpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="pinkyEffortLabel">
+        <property name="text">
+         <string>Pinky:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSlider" name="pinkyEffortSlider">
+        <property name="minimum">
+         <number>-60</number>
+        </property>
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QDoubleSpinBox" name="pinkyEffortSpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="thumb1EffortLabel">
+        <property name="text">
+         <string>Thumb 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSlider" name="thumb1EffortSlider">
+        <property name="minimum">
+         <number>-60</number>
+        </property>
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QDoubleSpinBox" name="thumb1EffortSpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-1.200000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1.200000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="thumb2EffortLabel">
+        <property name="text">
+         <string>Thumb 2:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSlider" name="thumb2EffortSlider">
+        <property name="minimum">
+         <number>-60</number>
+        </property>
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QDoubleSpinBox" name="thumb2EffortSpinBox">
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
         </property>
        </widget>
       </item>

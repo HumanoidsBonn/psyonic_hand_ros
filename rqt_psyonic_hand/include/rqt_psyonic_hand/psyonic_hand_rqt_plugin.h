@@ -5,6 +5,8 @@
 
 #include "ui_psyonic_hand_rqt_plugin.h"
 
+#include <array>
+
 namespace rqt_psyonic_hand
 {
 
@@ -21,20 +23,40 @@ public:
 
 private slots:
   // UI slots
-  void publishJointPositionCommand(ros::Publisher* pub, double value);
-  void jointPositionCommandSliderMoved(int value);
-  void jointPositionCommandSpinBoxEdited();
+  void publishJointCommand(ros::Publisher* pub, double value);
+  void jointCommandSliderMoved(int value);
+  void jointCommandSpinBoxEdited();
+  void controlModeChanged();
 
 private:
   Ui::PsyonicHandRqtPlugin ui;
   QWidget* widget;
 
-  ros::Publisher index_joint_pub;
-  ros::Publisher middle_joint_pub;
-  ros::Publisher ring_joint_pub;
-  ros::Publisher pinky_joint_pub;
-  ros::Publisher thumb1_joint_pub;
-  ros::Publisher thumb2_joint_pub;
+  static constexpr size_t NUM_CONTROLLERS_PER_JOINT = 3;
+  static constexpr size_t NUM_HAND_JOINTS = 6;
+  static constexpr size_t NUM_CONTROLLERS = NUM_CONTROLLERS_PER_JOINT * NUM_HAND_JOINTS;
+
+  std::array<std::string, NUM_HAND_JOINTS> JOINT_NAMES = {
+    "index",
+    "middle",
+    "ring",
+    "pinky",
+    "thumb1",
+    "thumb2"
+  };
+
+  std::array<std::string, NUM_CONTROLLERS_PER_JOINT> CONTROLLER_NAMES = {
+    "position",
+    "velocity",
+    "effort"
+  };
+
+  std::array<ros::Publisher, NUM_CONTROLLERS> joint_pubs;
+  std::array<QSlider*, NUM_CONTROLLERS> joint_sliders;
+  std::array<QDoubleSpinBox*, NUM_CONTROLLERS> joint_spinboxes;
+
+  ros::ServiceClient change_control_mode_client;
+  ros::ServiceClient change_reply_mode_client;
 
   std::unordered_map<QSlider*, ros::Publisher*> joint_pub_map;
   std::unordered_map<QSlider*, QDoubleSpinBox*> joint_slider_spinbox_map;

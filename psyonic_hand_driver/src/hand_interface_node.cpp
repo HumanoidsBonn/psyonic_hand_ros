@@ -1,61 +1,65 @@
 #include "psyonic_hand_driver/hand_interface.h"
 #include "psyonic_hand_driver/hand_ble.h"
-#include "psyonic_hand_driver/HandInterfaceNodeConfig.h"
 
 #include <ros/ros.h>
 #include <controller_manager/controller_manager.h>
-#include <dynamic_reconfigure/server.h>
+#include <psyonic_hand_driver/ChangeControlMode.h>
+#include <psyonic_hand_driver/ChangeReplyMode.h>
 
-#include <std_msgs/Float64.h>
+#include <boost/algorithm/string.hpp>
 
 std::unique_ptr<psyonic_hand_driver::PsyonicHand> hand = nullptr;
-dynamic_reconfigure::Server<psyonic_hand_driver::HandInterfaceNodeConfig> *config_server;
-boost::recursive_mutex config_mutex;
-psyonic_hand_driver::HandInterfaceNodeConfig current_config;
+std::unique_ptr<controller_manager::ControllerManager> cm = nullptr;
 
-ros::Publisher index_joint_pub;
-ros::Publisher middle_joint_pub;
-ros::Publisher ring_joint_pub;
-ros::Publisher pinky_joint_pub;
-ros::Publisher thumb1_joint_pub;
-ros::Publisher thumb2_joint_pub;
+std::vector<std::string> position_controllers;
+std::vector<std::string> velocity_controllers;
+std::vector<std::string> effort_controllers;
+std::vector<std::string> active_controllers;
 
-/*
-config_mutex.lock();
-(change stuff in current_config)
-config_server->updateConfig(current_config);
-config_mutex.unlock();
-*/
-
-std_msgs::Float64 toMsg(double value)
+bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psyonic_hand_driver::ChangeControlMode::Response &res)
 {
-  std_msgs::Float64 msg;
-  msg.data = value;
-  return msg;
-}
-
-void reconfigureCallback(psyonic_hand_driver::HandInterfaceNodeConfig &config, uint32_t level)
-{
-  if (!hand)
+  auto requested_mode = static_cast<psyonic_hand_driver::ControlMode>(req.control_mode);
+  if (requested_mode == hand->getControlMode())
   {
-    ROS_ERROR("Hand not initialized");
-    return;
+    res.success = true;
+    return true;
   }
-  hand->control_mode = static_cast<psyonic_hand_driver::ControlMode>(config.control_mode);
-  hand->reply_mode_request = static_cast<psyonic_hand_driver::ReplyMode>(config.reply_mode);
-
-  if (level & 1 << 2)
+  switch(requested_mode)
   {
-    ROS_WARN("Publish joint commands");
-    index_joint_pub.publish(toMsg(config.pos_index));
-    middle_joint_pub.publish(toMsg(config.pos_middle));
-    ring_joint_pub.publish(toMsg(config.pos_ring));
-    pinky_joint_pub.publish(toMsg(config.pos_pinky));
-    thumb1_joint_pub.publish(toMsg(config.pos_thumb1));
-    thumb2_joint_pub.publish(toMsg(config.pos_thumb2));
+    case psyonic_hand_driver::ControlMode::POSITION:
+    {
+      cm->switchController(position_controllers, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
+      active_controllers = position_controllers;
+      hand->setControlMode(psyonic_hand_driver::ControlMode::POSITION);
+      break;
+    }
+    case psyonic_hand_driver::ControlMode::VELOCITY:
+    {
+      cm->switchController(velocity_controllers, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
+      active_controllers = velocity_controllers;
+      hand->setControlMode(psyonic_hand_driver::ControlMode::VELOCITY);
+      break;
+    }
+    case psyonic_hand_driver::ControlMode::TORQUE:
+    {
+      cm->switchController(effort_controllers, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
+      active_controllers = effort_controllers;
+      hand->setControlMode(psyonic_hand_driver::ControlMode::TORQUE);
+      break;
+    }
+    case psyonic_hand_driver::ControlMode::READ_ONLY:
+    {
+      cm->switchController({}, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
+      active_controllers.clear();
+      hand->setControlMode(psyonic_hand_driver::ControlMode::READ_ONLY);
+      break;
+    }
+    default:
+    {
+      res.success = false;
+    }
   }
-
-  current_config = config;
+  return true;
 }
 
 int main(int argc, char **argv)
@@ -65,6 +69,19 @@ int main(int argc, char **argv)
   ros::NodeHandle nhp("~");
   ros::AsyncSpinner spinner(4);
   spinner.start();
+
+  const std::string controller_manager_namespace = nhp.param<std::string>("controller_manager_namespace", "");
+  const std::string position_controllers_str = nhp.param<std::string>("position_controllers",
+    "index_position_controller middle_position_controller ring_position_controller pinky_position_controller thumb1_position_controller thumb2_position_controller");
+  boost::algorithm::split(position_controllers, position_controllers_str, boost::is_any_of(" "));
+  const std::string velocity_controllers_str = nhp.param<std::string>("velocity_controllers",
+    "index_velocity_controller middle_velocity_controller ring_velocity_controller pinky_velocity_controller thumb1_velocity_controller thumb2_velocity_controller");
+  boost::algorithm::split(velocity_controllers, velocity_controllers_str, boost::is_any_of(" "));
+  const std::string effort_controllers_str = nhp.param<std::string>("effort_controllers",
+    "index_effort_controller middle_effort_controller ring_effort_controller pinky_effort_controller thumb1_effort_controller thumb2_effort_controller");
+  boost::algorithm::split(effort_controllers, effort_controllers_str, boost::is_any_of(" "));
+
+  ros::NodeHandle cm_nh(controller_manager_namespace);
 
   /*psyonic_hand_driver::HandBLE hand_ble;
   hand_ble.startScanForHand();
@@ -90,27 +107,19 @@ int main(int argc, char **argv)
   ros::Duration(5.0).sleep();
 
   hand_ble.sendCommand("g08:0.20");*/
-
+  
   const std::string device = nhp.param<std::string>("device", "usb-FTDI_TTL232R_FTAM6SIZ-if00-port0");
 
   hand = std::make_unique<psyonic_hand_driver::PsyonicHand>();
-  controller_manager::ControllerManager cm(hand.get(), nhp);
+  cm = std::make_unique<controller_manager::ControllerManager>(hand.get(), cm_nh);
+
+  ros::ServiceServer change_control_mode_srv = nhp.advertiseService("change_control_mode", changeControlMode);
 
   if (!hand->connect(device))
   {
     ROS_ERROR("Failed to connect to hand");
     return 1;
   }
-
-  index_joint_pub = nhp.advertise<std_msgs::Float64>("index_joint_controller/command", 1);
-  middle_joint_pub = nhp.advertise<std_msgs::Float64>("middle_joint_controller/command", 1);
-  ring_joint_pub = nhp.advertise<std_msgs::Float64>("ring_joint_controller/command", 1);
-  pinky_joint_pub = nhp.advertise<std_msgs::Float64>("pinky_joint_controller/command", 1);
-  thumb1_joint_pub = nhp.advertise<std_msgs::Float64>("thumb1_joint_controller/command", 1);
-  thumb2_joint_pub = nhp.advertise<std_msgs::Float64>("thumb2_joint_controller/command", 1);
-
-  config_server = new dynamic_reconfigure::Server<psyonic_hand_driver::HandInterfaceNodeConfig>(config_mutex, nhp);
-  config_server->setCallback(reconfigureCallback);
 
   ros::Time last_read_time = ros::Time::now();
   ros::Time last_update_time = ros::Time::now();
@@ -121,7 +130,7 @@ int main(int argc, char **argv)
     hand->read(read_time, read_time - last_read_time);
     last_read_time = read_time;
     ros::Time update_time = ros::Time::now();
-    cm.update(update_time, update_time - last_update_time);
+    cm->update(update_time, update_time - last_update_time);
     last_update_time = update_time;
     ros::Time write_time = ros::Time::now();
     hand->write(write_time, write_time - last_write_time);

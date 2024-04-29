@@ -10,13 +10,12 @@ set (CATKIN_DEPENDENCIES
     hardware_interface
     controller_manager
     serial
-    dynamic_reconfigure
 )
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDENCIES})
+find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDENCIES} message_generation)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -65,6 +64,11 @@ add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 #   Service1.srv
 #   Service2.srv
 # )
+add_service_files(
+  FILES
+  ChangeControlMode.srv
+  ChangeReplyMode.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -78,6 +82,7 @@ add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 #   DEPENDENCIES
 #   std_msgs  # Or other packages containing msgs
 # )
+generate_messages()
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -98,10 +103,6 @@ add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 #   cfg/DynReconf1.cfg
 #   cfg/DynReconf2.cfg
 # )
-generate_dynamic_reconfigure_options(
-    cfg/HandInterfaceNode.cfg
-)
-
 
 ###################################
 ## catkin specific configuration ##
@@ -114,8 +115,8 @@ generate_dynamic_reconfigure_options(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES robotiq_gripper
-   CATKIN_DEPENDS ${CATKIN_DEPENDENCIES}
+#  LIBRARIES psyonic_hand_driver
+   CATKIN_DEPENDS ${CATKIN_DEPENDENCIES} message_runtime
 #  DEPENDS system_lib
 )
 
@@ -128,12 +129,11 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${LIBMODBUS_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/robotiq_gripper.cpp
+#   src/${PROJECT_NAME}/psyonic_hand_driver.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -144,20 +144,20 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_interface_node src/hand_interface_node.cpp src/hand_interface.cpp src/hand_serial.cpp src/hand_serial_data.cpp src/hand_ble.cpp)
+add_executable(${PROJECT_NAME}_interface src/hand_interface_node.cpp src/hand_interface.cpp src/hand_serial.cpp src/hand_serial_data.cpp src/hand_ble.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
 ## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
-set_target_properties(${PROJECT_NAME}_interface_node PROPERTIES OUTPUT_NAME hand_interface_node PREFIX "")
+set_target_properties(${PROJECT_NAME}_interface PROPERTIES OUTPUT_NAME hand_interface PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_interface_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_gencfg)
+add_dependencies(${PROJECT_NAME}_interface ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_interface_node ${catkin_LIBRARIES} ${LIBMODBUS_LIBRARIES} simpleble::simpleble)
+target_link_libraries(${PROJECT_NAME}_interface ${catkin_LIBRARIES} simpleble::simpleble)
 
 #############
 ## Install ##
@@ -206,7 +206,7 @@ target_link_libraries(${PROJECT_NAME}_interface_node ${catkin_LIBRARIES} ${LIBMO
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_robotiq_gripper.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_psyonic_hand_driver.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

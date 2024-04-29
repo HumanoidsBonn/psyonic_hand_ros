@@ -87,4 +87,10 @@ static inline double currentToTorque(int16_t current)
   return static_cast<double>(current) / C * 1.49 / 1000.0;
 }
 
+static inline int16_t torqueToCurrent(double torque)
+{
+  constexpr double C = 620.606079; // this could be read via bluetooth
+  return safeCast(torque * C * 1000.0 / 1.49);
+}
+
 } // namespace psyonic_hand_driver

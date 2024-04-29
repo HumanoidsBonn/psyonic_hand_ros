@@ -42,6 +42,12 @@ public:
   std::unique_ptr<HandReply> queryStatus(ReplyMode reply_mode);
 
   std::unique_ptr<HandReply> sendPositions(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
+
+  std::unique_ptr<HandReply> sendVelocities(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
+
+  std::unique_ptr<HandReply> sendTorque(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
+
+  std::unique_ptr<HandReply> sendVoltage(ReplyMode reply_mode, double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 };
 
 template<typename T>
