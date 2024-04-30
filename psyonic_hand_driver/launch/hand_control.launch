@@ -2,9 +2,9 @@
 <launch>
 
   <arg name="controller_manager_namespace" default="hand_controllers"/>
-  <arg name="position_controllers" default="index_position_controller middle_position_controller ring_position_controller pinky_position_controller thumb1_position_controller thumb2_position_controller"/>
-  <arg name="velocity_controllers" default="index_velocity_controller middle_velocity_controller ring_velocity_controller pinky_velocity_controller thumb1_velocity_controller thumb2_velocity_controller"/>
-  <arg name="effort_controllers" default="index_effort_controller middle_effort_controller ring_effort_controller pinky_effort_controller thumb1_effort_controller thumb2_effort_controller"/>
+  <arg name="position_controllers" default="hand_position_controller"/>
+  <arg name="velocity_controllers" default="hand_velocity_controller"/>
+  <arg name="effort_controllers" default="hand_effort_controller"/>
 
   <group ns="$(arg controller_manager_namespace)">
     <rosparam command="load" file="$(find psyonic_hand_driver)/config/hand_controllers.yaml"/>

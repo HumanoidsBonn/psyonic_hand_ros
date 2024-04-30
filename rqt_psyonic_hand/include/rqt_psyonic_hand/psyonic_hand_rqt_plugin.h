@@ -2,6 +2,7 @@
 
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
+#include <std_msgs/Float64MultiArray.h>
 
 #include "ui_psyonic_hand_rqt_plugin.h"
 
@@ -23,7 +24,6 @@ public:
 
 private slots:
   // UI slots
-  void publishJointCommand(ros::Publisher* pub, double value);
   void jointCommandSliderMoved(int value);
   void jointCommandSpinBoxEdited();
   void controlModeChanged();
@@ -32,9 +32,9 @@ private:
   Ui::PsyonicHandRqtPlugin ui;
   QWidget* widget;
 
-  static constexpr size_t NUM_CONTROLLERS_PER_JOINT = 3;
+  static constexpr size_t NUM_CONTROLLER_TYPES = 3;
   static constexpr size_t NUM_HAND_JOINTS = 6;
-  static constexpr size_t NUM_CONTROLLERS = NUM_CONTROLLERS_PER_JOINT * NUM_HAND_JOINTS;
+  static constexpr size_t NUM_CONTROLLERS = NUM_CONTROLLER_TYPES * NUM_HAND_JOINTS;
 
   std::array<std::string, NUM_HAND_JOINTS> JOINT_NAMES = {
     "index",
@@ -45,36 +45,39 @@ private:
     "thumb2"
   };
 
-  std::array<std::string, NUM_CONTROLLERS_PER_JOINT> CONTROLLER_NAMES = {
+  std::array<std::string, NUM_CONTROLLER_TYPES> CONTROLLER_NAMES = {
     "position",
     "velocity",
     "effort"
   };
 
-  static constexpr std::array<double, NUM_CONTROLLERS_PER_JOINT> SLIDER_SPINBOX_RATIOS = {
+  static constexpr std::array<double, NUM_CONTROLLER_TYPES> SLIDER_SPINBOX_RATIOS = {
     1.0,
     1.0,
     10.0
   };
 
-  static constexpr std::array<double, NUM_CONTROLLERS_PER_JOINT> PUB_VALUE_SPINBOX_RATIOS = {
+  static constexpr std::array<double, NUM_CONTROLLER_TYPES> MSG_VALUE_SPINBOX_RATIOS = {
     M_PI / 180.0,
     M_PI / 180.0,
     1.0
   };
 
-  std::array<ros::Publisher, NUM_CONTROLLERS> joint_pubs;
+  std::array<ros::Publisher, NUM_CONTROLLER_TYPES> joint_pubs;
   std::array<QSlider*, NUM_CONTROLLERS> joint_sliders;
   std::array<QDoubleSpinBox*, NUM_CONTROLLERS> joint_spinboxes;
+  std::array<std_msgs::Float64MultiArray, NUM_CONTROLLERS> joint_commands;
 
   ros::ServiceClient change_control_mode_client;
   ros::ServiceClient change_reply_mode_client;
 
-  std::unordered_map<QSlider*, ros::Publisher*> joint_pub_map;
-  std::unordered_map<QSlider*, QDoubleSpinBox*> joint_slider_spinbox_map;
-  std::unordered_map<QDoubleSpinBox*, QSlider*> joint_spinbox_slider_map;
+  std::unordered_map<QSlider*, QDoubleSpinBox*> slider_spinbox_map;
+  std::unordered_map<QDoubleSpinBox*, QSlider*> spinbox_slider_map;
+  std::unordered_map<QDoubleSpinBox*, ros::Publisher*> spinbox_pub_map;
+  std::unordered_map<QDoubleSpinBox*, double> msg_value_spinbox_ratio_map;
+  std::unordered_map<QDoubleSpinBox*, double*> spinbox_msg_value_map;
   std::unordered_map<QSlider*, double> slider_spinbox_ratio_map;
-  std::unordered_map<ros::Publisher*, double> pub_value_spinbox_ratio_map;
+  std::unordered_map<ros::Publisher*, std_msgs::Float64MultiArray*> pub_msg_map;
 };
 
 } // namespace rqt_psyonic_hand

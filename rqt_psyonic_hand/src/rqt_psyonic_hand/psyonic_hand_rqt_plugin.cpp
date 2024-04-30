@@ -2,7 +2,6 @@
 
 #include <pluginlib/class_list_macros.h>
 
-#include <std_msgs/Float64.h>
 #include <psyonic_hand_driver/ChangeControlMode.h>
 #include <psyonic_hand_driver/ChangeReplyMode.h>
 
@@ -73,22 +72,28 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
   ui.jointVelocityCommandGroupBox->setVisible(false);
   ui.jointEffortCommandGroupBox->setVisible(false);
 
-  for (size_t i = 0; i < NUM_CONTROLLERS_PER_JOINT; ++i)
+  for (size_t i = 0; i < NUM_CONTROLLER_TYPES; ++i)
   {
+    joint_pubs[i] = getNodeHandle().advertise<std_msgs::Float64MultiArray>("/hand_controllers/hand_" + CONTROLLER_NAMES[i] + "_controller/command", 1);
+    joint_commands[i].data.resize(NUM_HAND_JOINTS);
+    pub_msg_map[&joint_pubs[i]] = &joint_commands[i];
     for (size_t j = 0; j < NUM_HAND_JOINTS; ++j)
     {
-      joint_pubs[i * NUM_HAND_JOINTS + j] = getNodeHandle().advertise<std_msgs::Float64>("/hand_controllers/" + JOINT_NAMES[j] + "_" + CONTROLLER_NAMES[i] + "_controller/command", 1);
-      slider_spinbox_ratio_map[joint_sliders[i * NUM_HAND_JOINTS + j]] = SLIDER_SPINBOX_RATIOS[i];
-      pub_value_spinbox_ratio_map[&joint_pubs[i * NUM_HAND_JOINTS + j]] = PUB_VALUE_SPINBOX_RATIOS[i];
+      QSlider *slider = joint_sliders[i * NUM_HAND_JOINTS + j];
+      QDoubleSpinBox *spinbox = joint_spinboxes[i * NUM_HAND_JOINTS + j];
+      slider_spinbox_map[slider] = spinbox;
+      spinbox_slider_map[spinbox] = slider;
+      spinbox_pub_map[spinbox] = &joint_pubs[i];
+      slider_spinbox_ratio_map[slider] = SLIDER_SPINBOX_RATIOS[i];
+      msg_value_spinbox_ratio_map[spinbox] = MSG_VALUE_SPINBOX_RATIOS[i];
+      spinbox_msg_value_map[spinbox] = &joint_commands[i].data[j];
+      joint_commands[i].data[j] = spinbox->value() * MSG_VALUE_SPINBOX_RATIOS[i];
     }
   }
 
   // Match sliders, spinboxes, and publishers
   for (size_t i = 0; i < NUM_CONTROLLERS; ++i)
   {
-    joint_slider_spinbox_map[joint_sliders[i]] = joint_spinboxes[i];
-    joint_spinbox_slider_map[joint_spinboxes[i]] = joint_sliders[i];
-    joint_pub_map[joint_sliders[i]] = &joint_pubs[i];
     connect(joint_sliders[i], &QSlider::sliderMoved, this, &PsyonicHandRqtPlugin::jointCommandSliderMoved);
     connect(joint_spinboxes[i], &QDoubleSpinBox::editingFinished, this, &PsyonicHandRqtPlugin::jointCommandSpinBoxEdited);
   }
@@ -105,7 +110,7 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
 void PsyonicHandRqtPlugin::shutdownPlugin()
 {
   // unregister all publishers here
-  for (size_t i = 0; i < NUM_CONTROLLERS; ++i)
+  for (size_t i = 0; i < joint_pubs.size(); ++i)
   {
     joint_pubs[i].shutdown();
   }
@@ -123,28 +128,30 @@ void PsyonicHandRqtPlugin::restoreSettings(const qt_gui_cpp::Settings& plugin_se
   // v = instance_settings.value(k)
 }
 
-void PsyonicHandRqtPlugin::publishJointCommand(ros::Publisher* pub, double value)
-{
-  std_msgs::Float64 msg;
-  msg.data = value * pub_value_spinbox_ratio_map[pub];
-  pub->publish(msg);
-}
-
 void PsyonicHandRqtPlugin::jointCommandSliderMoved(int value)
 {
   QSlider *slider = qobject_cast<QSlider*>(sender());
+  QDoubleSpinBox *spinbox = slider_spinbox_map[slider];
+  double *msg_value = spinbox_msg_value_map[spinbox];
+  ros::Publisher *pub = spinbox_pub_map[spinbox];
+
   double dbl_val = static_cast<double>(value) / slider_spinbox_ratio_map[slider];
-  joint_slider_spinbox_map[slider]->setValue(dbl_val);
-  publishJointCommand(joint_pub_map[slider], dbl_val);
+  spinbox->setValue(dbl_val);
+  *msg_value = dbl_val * msg_value_spinbox_ratio_map[spinbox];
+  pub->publish(*pub_msg_map[pub]);
 }
 
 void PsyonicHandRqtPlugin::jointCommandSpinBoxEdited()
 {
   QDoubleSpinBox *spinbox = qobject_cast<QDoubleSpinBox*>(sender());
-  QSlider *slider = joint_spinbox_slider_map[spinbox];
+  QSlider *slider = spinbox_slider_map[spinbox];
+  double *msg_value = spinbox_msg_value_map[spinbox];
+  ros::Publisher *pub = spinbox_pub_map[spinbox];
+
   double value = spinbox->value();
   slider->setValue(static_cast<int>(value * slider_spinbox_ratio_map[slider]));
-  publishJointCommand(joint_pub_map[slider], value);
+  *msg_value = value * msg_value_spinbox_ratio_map[spinbox];
+  pub->publish(*pub_msg_map[pub]);
 }
 
 void PsyonicHandRqtPlugin::controlModeChanged()

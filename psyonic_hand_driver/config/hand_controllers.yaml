@@ -1,71 +1,29 @@
-index_position_controller:
-  type: position_controllers/JointPositionController
-  joint: index_joint
+hand_position_controller:
+  type: position_controllers/JointGroupPositionController
+  joints:
+    - index_joint
+    - middle_joint
+    - ring_joint
+    - pinky_joint
+    - thumb1_joint
+    - thumb2_joint
 
-middle_position_controller:
-  type: position_controllers/JointPositionController
-  joint: middle_joint
+hand_velocity_controller:
+  type: velocity_controllers/JointGroupVelocityController
+  joints:
+    - index_joint
+    - middle_joint
+    - ring_joint
+    - pinky_joint
+    - thumb1_joint
+    - thumb2_joint
 
-ring_position_controller:
-  type: position_controllers/JointPositionController
-  joint: ring_joint
-
-pinky_position_controller:
-  type: position_controllers/JointPositionController
-  joint: pinky_joint
-
-thumb1_position_controller:
-  type: position_controllers/JointPositionController
-  joint: thumb1_joint
-
-thumb2_position_controller:
-  type: position_controllers/JointPositionController
-  joint: thumb2_joint
-
-index_velocity_controller:
-  type: velocity_controllers/JointVelocityController
-  joint: index_joint
-
-middle_velocity_controller:
-  type: velocity_controllers/JointVelocityController
-  joint: middle_joint
-
-ring_velocity_controller:
-  type: velocity_controllers/JointVelocityController
-  joint: ring_joint
-
-pinky_velocity_controller:
-  type: velocity_controllers/JointVelocityController
-  joint: pinky_joint
-
-thumb1_velocity_controller:
-  type: velocity_controllers/JointVelocityController
-  joint: thumb1_joint
-
-thumb2_velocity_controller:
-  type: velocity_controllers/JointVelocityController
-  joint: thumb2_joint
-
-index_effort_controller:
-  type: effort_controllers/JointEffortController
-  joint: index_joint
-
-middle_effort_controller:
-  type: effort_controllers/JointEffortController
-  joint: middle_joint
-
-ring_effort_controller:
-  type: effort_controllers/JointEffortController
-  joint: ring_joint
-
-pinky_effort_controller:
-  type: effort_controllers/JointEffortController
-  joint: pinky_joint
-
-thumb1_effort_controller:
-  type: effort_controllers/JointEffortController
-  joint: thumb1_joint
-
-thumb2_effort_controller:
-  type: effort_controllers/JointEffortController
-  joint: thumb2_joint
+hand_effort_controller:
+  type: effort_controllers/JointGroupEffortController
+  joints:
+    - index_joint
+    - middle_joint
+    - ring_joint
+    - pinky_joint
+    - thumb1_joint
+    - thumb2_joint
