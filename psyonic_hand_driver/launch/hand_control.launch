@@ -1,22 +1,30 @@
 <?xml version="1.0"?>
 <launch>
 
-  <arg name="controller_manager_namespace" default="hand_controllers"/>
+  <arg name="controller_namespace" default="hand"/>
+  <arg name="joint_state_controllers" default="hand_state_controller"/>
   <arg name="position_controllers" default="hand_position_controller"/>
   <arg name="velocity_controllers" default="hand_velocity_controller"/>
   <arg name="effort_controllers" default="hand_effort_controller"/>
 
-  <group ns="$(arg controller_manager_namespace)">
+  <group ns="$(arg controller_namespace)">
     <rosparam command="load" file="$(find psyonic_hand_driver)/config/hand_controllers.yaml"/>
 
     <node name="hand_controller_spawner" pkg="controller_manager" type="spawner"
+      args="$(arg joint_state_controllers)">
+    </node>
+
+    <node name="hand_stopped_controller_spawner" pkg="controller_manager" type="spawner"
       args="--stopped $(arg position_controllers) $(arg velocity_controllers) $(arg effort_controllers)">
     </node>
   </group>
 
+  <!-- relay joint states to global namespace -->
+  <node if="$(eval controller_namespace != '/')" name="hand_state_relay" pkg="topic_tools" type="relay" args="$(arg controller_namespace)/joint_states /joint_states" />
+
   <!-- Load hardware interface -->
   <node name="hand_interface" pkg="psyonic_hand_driver" type="hand_interface" output="screen">
-    <param name="controller_manager_namespace" value="$(arg controller_manager_namespace)" />
+    <param name="controller_namespace" value="$(arg controller_namespace)" />
     <param name="position_controllers" value="$(arg position_controllers)" />
     <param name="velocity_controllers" value="$(arg velocity_controllers)" />
     <param name="effort_controllers" value="$(arg effort_controllers)" />

@@ -9,6 +9,7 @@ set (CATKIN_DEPENDENCIES
     rqt_gui_cpp
     psyonic_hand_driver
     std_msgs
+    sensor_msgs
 )
 
 ## Find catkin macros and libraries

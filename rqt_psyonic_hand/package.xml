@@ -55,6 +55,7 @@
   <depend>rqt_gui</depend>
   <depend>rqt_gui_cpp</depend>
   <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
   <depend>psyonic_hand_driver</depend>
   <!--depend>moveit_setup_assistant</depend-->
 

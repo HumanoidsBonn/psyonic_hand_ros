@@ -68,13 +68,13 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
     ui.thumb2EffortSpinBox
   };
 
-  ui.jointPositionCommandGroupBox->setVisible(true);
-  ui.jointVelocityCommandGroupBox->setVisible(false);
-  ui.jointEffortCommandGroupBox->setVisible(false);
+  ui.jointPositionCommandGroupBox->setEnabled(false);
+  ui.jointVelocityCommandGroupBox->setEnabled(false);
+  ui.jointEffortCommandGroupBox->setEnabled(false);
 
   for (size_t i = 0; i < NUM_CONTROLLER_TYPES; ++i)
   {
-    joint_pubs[i] = getNodeHandle().advertise<std_msgs::Float64MultiArray>("/hand_controllers/hand_" + CONTROLLER_NAMES[i] + "_controller/command", 1);
+    joint_pubs[i] = getNodeHandle().advertise<std_msgs::Float64MultiArray>("/hand/hand_" + CONTROLLER_NAMES[i] + "_controller/command", 1);
     joint_commands[i].data.resize(NUM_HAND_JOINTS);
     pub_msg_map[&joint_pubs[i]] = &joint_commands[i];
     for (size_t j = 0; j < NUM_HAND_JOINTS; ++j)
@@ -90,6 +90,9 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
       joint_commands[i].data[j] = spinbox->value() * MSG_VALUE_SPINBOX_RATIOS[i];
     }
   }
+
+  connect(this, &PsyonicHandRqtPlugin::jointStateUpdated, this, &PsyonicHandRqtPlugin::updateJointStateGUI);
+  joint_state_sub = getNodeHandle().subscribe("/hand/joint_states", 1, &PsyonicHandRqtPlugin::jointStateCallback, this);
 
   // Match sliders, spinboxes, and publishers
   for (size_t i = 0; i < NUM_CONTROLLERS; ++i)
@@ -128,6 +131,12 @@ void PsyonicHandRqtPlugin::restoreSettings(const qt_gui_cpp::Settings& plugin_se
   // v = instance_settings.value(k)
 }
 
+void PsyonicHandRqtPlugin::jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg)
+{
+  joint_state_msg = *msg;
+  emit jointStateUpdated();
+}
+
 void PsyonicHandRqtPlugin::jointCommandSliderMoved(int value)
 {
   QSlider *slider = qobject_cast<QSlider*>(sender());
@@ -160,27 +169,33 @@ void PsyonicHandRqtPlugin::controlModeChanged()
   if (ui.controlPositionRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::POSITION_CONTROL;
-    ui.jointVelocityCommandGroupBox->setVisible(false);
-    ui.jointEffortCommandGroupBox->setVisible(false);
-    ui.jointPositionCommandGroupBox->setVisible(true);
+    ui.jointVelocityCommandGroupBox->setEnabled(false);
+    ui.jointEffortCommandGroupBox->setEnabled(false);
+    ui.jointPositionCommandGroupBox->setEnabled(true);
+    joint_pubs[0].publish(*pub_msg_map[&joint_pubs[0]]);
   }
   else if (ui.controlVelocityRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::VELOCITY_CONTROL;
-    ui.jointPositionCommandGroupBox->setVisible(false);
-    ui.jointEffortCommandGroupBox->setVisible(false);
-    ui.jointVelocityCommandGroupBox->setVisible(true);
+    ui.jointPositionCommandGroupBox->setEnabled(false);
+    ui.jointEffortCommandGroupBox->setEnabled(false);
+    ui.jointVelocityCommandGroupBox->setEnabled(true);
+    joint_pubs[1].publish(*pub_msg_map[&joint_pubs[1]]);
   }
   else if (ui.controlTorqueRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::TORQUE_CONTROL;
-    ui.jointPositionCommandGroupBox->setVisible(false);
-    ui.jointVelocityCommandGroupBox->setVisible(false);
-    ui.jointEffortCommandGroupBox->setVisible(true);
+    ui.jointPositionCommandGroupBox->setEnabled(false);
+    ui.jointVelocityCommandGroupBox->setEnabled(false);
+    ui.jointEffortCommandGroupBox->setEnabled(true);
+    joint_pubs[2].publish(*pub_msg_map[&joint_pubs[2]]);
   }
   else if (ui.controlReadOnlyRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::READ_ONLY;
+    ui.jointPositionCommandGroupBox->setEnabled(false);
+    ui.jointVelocityCommandGroupBox->setEnabled(false);
+    ui.jointEffortCommandGroupBox->setEnabled(false);
   }
   else
   {
@@ -191,6 +206,28 @@ void PsyonicHandRqtPlugin::controlModeChanged()
   {
     ROS_ERROR("Failed to call service /hand_interface/change_control_mode");
   }
+}
+
+void PsyonicHandRqtPlugin::updateJointStateGUI()
+{
+  ui.statePosIndexSpinBox->setValue(joint_state_msg.position[0] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.statePosMiddleSpinBox->setValue(joint_state_msg.position[1] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.statePosRingSpinBox->setValue(joint_state_msg.position[2] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.statePosPinkySpinBox->setValue(joint_state_msg.position[3] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.statePosThumb1SpinBox->setValue(joint_state_msg.position[4] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.statePosThumb2SpinBox->setValue(joint_state_msg.position[5] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.stateVelIndexSpinBox->setValue(joint_state_msg.velocity[0] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateVelMiddleSpinBox->setValue(joint_state_msg.velocity[1] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateVelRingSpinBox->setValue(joint_state_msg.velocity[2] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateVelPinkySpinBox->setValue(joint_state_msg.velocity[3] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateVelThumb1SpinBox->setValue(joint_state_msg.velocity[4] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateVelThumb2SpinBox->setValue(joint_state_msg.velocity[5] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateEffIndexSpinBox->setValue(joint_state_msg.effort[0] / MSG_VALUE_SPINBOX_RATIOS[2]);
+  ui.stateEffMiddleSpinBox->setValue(joint_state_msg.effort[1] / MSG_VALUE_SPINBOX_RATIOS[2]);
+  ui.stateEffRingSpinBox->setValue(joint_state_msg.effort[2] / MSG_VALUE_SPINBOX_RATIOS[2]);
+  ui.stateEffPinkySpinBox->setValue(joint_state_msg.effort[3] / MSG_VALUE_SPINBOX_RATIOS[2]);
+  ui.stateEffThumb1SpinBox->setValue(joint_state_msg.effort[4] / MSG_VALUE_SPINBOX_RATIOS[2]);
+  ui.stateEffThumb2SpinBox->setValue(joint_state_msg.effort[5] / MSG_VALUE_SPINBOX_RATIOS[2]);
 }
 
 } // namespace rqt_psyonic_hand

@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
 #include <std_msgs/Float64MultiArray.h>
+#include <sensor_msgs/JointState.h>
 
 #include "ui_psyonic_hand_rqt_plugin.h"
 
@@ -27,10 +28,16 @@ private slots:
   void jointCommandSliderMoved(int value);
   void jointCommandSpinBoxEdited();
   void controlModeChanged();
+  void updateJointStateGUI();
+
+signals:
+  void jointStateUpdated();
 
 private:
   Ui::PsyonicHandRqtPlugin ui;
   QWidget* widget;
+
+  void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg);
 
   static constexpr size_t NUM_CONTROLLER_TYPES = 3;
   static constexpr size_t NUM_HAND_JOINTS = 6;
@@ -67,6 +74,9 @@ private:
   std::array<QSlider*, NUM_CONTROLLERS> joint_sliders;
   std::array<QDoubleSpinBox*, NUM_CONTROLLERS> joint_spinboxes;
   std::array<std_msgs::Float64MultiArray, NUM_CONTROLLERS> joint_commands;
+
+  ros::Subscriber joint_state_sub;
+  sensor_msgs::JointState joint_state_msg;
 
   ros::ServiceClient change_control_mode_client;
   ros::ServiceClient change_reply_mode_client;

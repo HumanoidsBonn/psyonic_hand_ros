@@ -70,18 +70,15 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
-  const std::string controller_manager_namespace = nhp.param<std::string>("controller_manager_namespace", "");
-  const std::string position_controllers_str = nhp.param<std::string>("position_controllers",
-    "index_position_controller middle_position_controller ring_position_controller pinky_position_controller thumb1_position_controller thumb2_position_controller");
+  const std::string controller_namespace = nhp.param<std::string>("controller_namespace", "hand");
+  const std::string position_controllers_str = nhp.param<std::string>("position_controllers", "hand_position_controller");
   boost::algorithm::split(position_controllers, position_controllers_str, boost::is_any_of(" "));
-  const std::string velocity_controllers_str = nhp.param<std::string>("velocity_controllers",
-    "index_velocity_controller middle_velocity_controller ring_velocity_controller pinky_velocity_controller thumb1_velocity_controller thumb2_velocity_controller");
+  const std::string velocity_controllers_str = nhp.param<std::string>("velocity_controllers", "hand_velocity_controller");
   boost::algorithm::split(velocity_controllers, velocity_controllers_str, boost::is_any_of(" "));
-  const std::string effort_controllers_str = nhp.param<std::string>("effort_controllers",
-    "index_effort_controller middle_effort_controller ring_effort_controller pinky_effort_controller thumb1_effort_controller thumb2_effort_controller");
+  const std::string effort_controllers_str = nhp.param<std::string>("effort_controllers", "hand_effort_controller");
   boost::algorithm::split(effort_controllers, effort_controllers_str, boost::is_any_of(" "));
 
-  ros::NodeHandle cm_nh(controller_manager_namespace);
+  ros::NodeHandle cm_nh(controller_namespace);
 
   /*psyonic_hand_driver::HandBLE hand_ble;
   hand_ble.startScanForHand();
