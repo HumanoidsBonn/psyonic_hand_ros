@@ -51,6 +51,18 @@ private:
     "effort"
   };
 
+  static constexpr std::array<double, NUM_CONTROLLERS_PER_JOINT> SLIDER_SPINBOX_RATIOS = {
+    1.0,
+    1.0,
+    10.0
+  };
+
+  static constexpr std::array<double, NUM_CONTROLLERS_PER_JOINT> PUB_VALUE_SPINBOX_RATIOS = {
+    M_PI / 180.0,
+    M_PI / 180.0,
+    1.0
+  };
+
   std::array<ros::Publisher, NUM_CONTROLLERS> joint_pubs;
   std::array<QSlider*, NUM_CONTROLLERS> joint_sliders;
   std::array<QDoubleSpinBox*, NUM_CONTROLLERS> joint_spinboxes;
@@ -61,6 +73,8 @@ private:
   std::unordered_map<QSlider*, ros::Publisher*> joint_pub_map;
   std::unordered_map<QSlider*, QDoubleSpinBox*> joint_slider_spinbox_map;
   std::unordered_map<QDoubleSpinBox*, QSlider*> joint_spinbox_slider_map;
+  std::unordered_map<QSlider*, double> slider_spinbox_ratio_map;
+  std::unordered_map<ros::Publisher*, double> pub_value_spinbox_ratio_map;
 };
 
 } // namespace rqt_psyonic_hand
