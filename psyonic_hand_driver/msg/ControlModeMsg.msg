@@ -1,0 +1,7 @@
+uint8 POSITION_CONTROL = 16
+uint8 VELOCITY_CONTROL = 32
+uint8 TORQUE_CONTROL = 48
+uint8 VOLTAGE_CONTROL = 64
+uint8 READ_ONLY = 160
+
+uint8 control_mode

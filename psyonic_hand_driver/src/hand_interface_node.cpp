@@ -4,6 +4,8 @@
 #include <ros/ros.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <controller_manager/controller_manager.h>
+#include <psyonic_hand_driver/ControlModeMsg.h>
+#include <psyonic_hand_driver/ReplyModeMsg.h>
 #include <psyonic_hand_driver/ChangeControlMode.h>
 #include <psyonic_hand_driver/ChangeReplyMode.h>
 
@@ -11,8 +13,6 @@
 
 std::unique_ptr<psyonic_hand_driver::PsyonicHand> hand = nullptr;
 std::unique_ptr<controller_manager::ControllerManager> cm = nullptr;
-
-ros::Subscriber voltage_command_sub;
 
 const std::vector<std::string> NO_CONTROLLERS = {};
 std::vector<std::string> position_controllers;
@@ -34,42 +34,55 @@ bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psy
     {
       cm->switchController(position_controllers, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
       active_controllers = position_controllers;
-      hand->setControlMode(psyonic_hand_driver::ControlMode::POSITION);
+      res.success = hand->setControlMode(psyonic_hand_driver::ControlMode::POSITION);
       break;
     }
     case psyonic_hand_driver::ControlMode::VELOCITY:
     {
       cm->switchController(velocity_controllers, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
       active_controllers = velocity_controllers;
-      hand->setControlMode(psyonic_hand_driver::ControlMode::VELOCITY);
+      res.success = hand->setControlMode(psyonic_hand_driver::ControlMode::VELOCITY);
       break;
     }
     case psyonic_hand_driver::ControlMode::TORQUE:
     {
       cm->switchController(effort_controllers, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
       active_controllers = effort_controllers;
-      hand->setControlMode(psyonic_hand_driver::ControlMode::TORQUE);
+      res.success = hand->setControlMode(psyonic_hand_driver::ControlMode::TORQUE);
       break;
     }
     case psyonic_hand_driver::ControlMode::VOLTAGE:
     {
       cm->switchController(NO_CONTROLLERS, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
       active_controllers = NO_CONTROLLERS;
-      hand->setControlMode(psyonic_hand_driver::ControlMode::VOLTAGE);
+      res.success = hand->setControlMode(psyonic_hand_driver::ControlMode::VOLTAGE);
       break;
     }
     case psyonic_hand_driver::ControlMode::READ_ONLY:
     {
       cm->switchController({}, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
       active_controllers.clear();
-      hand->setControlMode(psyonic_hand_driver::ControlMode::READ_ONLY);
+      res.success = hand->setControlMode(psyonic_hand_driver::ControlMode::READ_ONLY);
       break;
     }
     default:
     {
+      ROS_ERROR_STREAM("Unknown control mode: " << static_cast<int>(requested_mode));
       res.success = false;
     }
   }
+  return true;
+}
+
+bool changeReplyMode(psyonic_hand_driver::ChangeReplyMode::Request &req, psyonic_hand_driver::ChangeReplyMode::Response &res)
+{
+  auto requested_mode = static_cast<psyonic_hand_driver::ReplyMode>(req.reply_mode);
+  if (requested_mode == hand->getReplyMode())
+  {
+    res.success = true;
+    return true;
+  }
+  res.success = hand->setReplyMode(requested_mode);
   return true;
 }
 
@@ -131,9 +144,19 @@ int main(int argc, char **argv)
   hand = std::make_unique<psyonic_hand_driver::PsyonicHand>();
   cm = std::make_unique<controller_manager::ControllerManager>(hand.get(), cm_nh);
 
-  voltage_command_sub = cm_nh.subscribe("hand_voltage_controller/command", 1, voltageCommandCallback);
+  ros::Subscriber voltage_command_sub = cm_nh.subscribe("hand_voltage_controller/command", 1, voltageCommandCallback);
+
+  ros::Publisher control_mode_pub = nhp.advertise<psyonic_hand_driver::ControlModeMsg>("control_mode", 1, true);
+  ros::Publisher reply_mode_pub = nhp.advertise<psyonic_hand_driver::ReplyModeMsg>("reply_mode", 1, true);
+
+  psyonic_hand_driver::ControlModeMsg control_mode_msg;
+  control_mode_msg.control_mode = static_cast<uint8_t>(hand->getControlMode());
+
+  psyonic_hand_driver::ReplyModeMsg reply_mode_msg;
+  reply_mode_msg.reply_mode = static_cast<uint8_t>(hand->getReplyMode());
 
   ros::ServiceServer change_control_mode_srv = nhp.advertiseService("change_control_mode", changeControlMode);
+  ros::ServiceServer change_reply_mode_srv = nhp.advertiseService("change_reply_mode", changeReplyMode);
 
   if (!hand->connect(device))
   {
@@ -155,6 +178,10 @@ int main(int argc, char **argv)
     ros::Time write_time = ros::Time::now();
     hand->write(write_time, write_time - last_write_time);
     last_write_time = write_time;
+    control_mode_msg.control_mode = static_cast<uint8_t>(hand->getControlMode());
+    control_mode_pub.publish(control_mode_msg);
+    reply_mode_msg.reply_mode = static_cast<uint8_t>(hand->getReplyMode());
+    reply_mode_pub.publish(reply_mode_msg);
   }
 
   return 0;

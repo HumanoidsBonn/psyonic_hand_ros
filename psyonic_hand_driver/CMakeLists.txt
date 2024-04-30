@@ -58,6 +58,11 @@ add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 #   Message1.msg
 #   Message2.msg
 # )
+add_message_files(
+  FILES
+  ControlModeMsg.msg
+  ReplyModeMsg.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
