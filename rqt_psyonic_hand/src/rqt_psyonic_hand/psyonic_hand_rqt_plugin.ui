@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>363</width>
+    <width>650</width>
     <height>891</height>
    </rect>
   </property>
@@ -14,12 +14,1084 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0" colspan="3">
+    <widget class="QGroupBox" name="controlModeGroupBox">
+     <property name="title">
+      <string>Control Mode</string>
+     </property>
+     <layout class="QGridLayout" name="controlModeGridLayout">
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="controlTorqueRadioButton">
+        <property name="text">
+         <string>Torque</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="controlPositionRadioButton">
+        <property name="text">
+         <string>Position</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="controlVelocityRadioButton">
+        <property name="text">
+         <string>Velocity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QRadioButton" name="controlReadOnlyRadioButton">
+        <property name="text">
+         <string>Read Only</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QRadioButton" name="controlVoltageRadioButton">
+        <property name="text">
+         <string>Voltage</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="3">
+    <widget class="QGroupBox" name="replyModeGroupBox">
+     <property name="title">
+      <string>Reply Mode</string>
+     </property>
+     <layout class="QGridLayout" name="replyModeGridLayout">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="replyV1RadioButton">
+        <property name="text">
+         <string>V1 (Position, Torque, Touch)</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="replyV2RadioButton">
+        <property name="text">
+         <string>V2 (Position, Velocities, Touch)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="replyV3RadioButton">
+        <property name="text">
+         <string>V3 (Pos, Velocities, Torques)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QGroupBox" name="positionCommandsGroupBox">
+     <property name="title">
+      <string>Joint position commands</string>
+     </property>
+     <layout class="QGridLayout" name="positionCommandsGridLayout">
+      <item row="1" column="0">
+       <widget class="QLabel" name="middlePositionLabel">
+        <property name="text">
+         <string>Middle:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="ringPositionSlider">
+        <property name="maximum">
+         <number>120</number>
+        </property>
+        <property name="value">
+         <number>30</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSlider" name="indexPositionSlider">
+        <property name="maximum">
+         <number>120</number>
+        </property>
+        <property name="value">
+         <number>30</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="middlePositionSlider">
+        <property name="maximum">
+         <number>120</number>
+        </property>
+        <property name="value">
+         <number>30</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="pinkyPositionLabel">
+        <property name="text">
+         <string>Pinky:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSlider" name="thumb2PositionSlider">
+        <property name="maximum">
+         <number>120</number>
+        </property>
+        <property name="value">
+         <number>40</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="thumb2PositionLabel">
+        <property name="text">
+         <string>Thumb 2:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QDoubleSpinBox" name="pinkyPostionSpinBox">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QDoubleSpinBox" name="thumb1PostionSpinBox">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-120.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>-30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="ringPositionLabel">
+        <property name="text">
+         <string>Ring:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSlider" name="pinkyPositionSlider">
+        <property name="maximum">
+         <number>120</number>
+        </property>
+        <property name="value">
+         <number>30</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSlider" name="thumb1PositionSlider">
+        <property name="minimum">
+         <number>-120</number>
+        </property>
+        <property name="maximum">
+         <number>0</number>
+        </property>
+        <property name="value">
+         <number>-30</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="thumb1PositionLabel">
+        <property name="text">
+         <string>Thumb 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="indexPositionLabel">
+        <property name="text">
+         <string>Index:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QDoubleSpinBox" name="indexPostionSpinBox">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QDoubleSpinBox" name="thumb2PostionSpinBox">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>40.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="ringPostionSpinBox">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="middlePostionSpinBox">
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="1" rowspan="3">
+    <widget class="QGroupBox" name="jointStateGroupBox">
+     <property name="title">
+      <string>Joint State</string>
+     </property>
+     <layout class="QGridLayout" name="jointStateGridLayout">
+      <item row="11" column="0">
+       <widget class="QDoubleSpinBox" name="stateVelThumb1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QDoubleSpinBox" name="statePosMiddleSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QDoubleSpinBox" name="stateVelMiddleSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="18" column="0">
+       <widget class="QDoubleSpinBox" name="stateEffThumb1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-1.200000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>1.200000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QDoubleSpinBox" name="statePosPinkySpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QDoubleSpinBox" name="stateVelRingSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="17" column="0">
+       <widget class="QDoubleSpinBox" name="stateEffPinkySpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QDoubleSpinBox" name="statePosIndexSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="12" column="0">
+       <widget class="QDoubleSpinBox" name="stateVelThumb2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QDoubleSpinBox" name="stateVelPinkySpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="14" column="0">
+       <widget class="QDoubleSpinBox" name="stateEffIndexSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="19" column="0">
+       <widget class="QDoubleSpinBox" name="stateEffThumb2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Velocity</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QDoubleSpinBox" name="statePosRingSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QDoubleSpinBox" name="statePosThumb1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-120.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>-30.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0">
+       <widget class="QDoubleSpinBox" name="stateVelIndexSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="16" column="0">
+       <widget class="QDoubleSpinBox" name="stateEffRingSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="15" column="0">
+       <widget class="QDoubleSpinBox" name="stateEffMiddleSpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-6.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>6.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QDoubleSpinBox" name="statePosThumb2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+        <property name="suffix">
+         <string>°</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <double>120.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>40.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="13" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Effort</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="2">
+    <widget class="QGroupBox" name="voltageCommandsGroupBox">
+     <property name="title">
+      <string>Voltage commands</string>
+     </property>
+     <layout class="QGridLayout" name="voltageCommandsGridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="indexVoltageLabel">
+        <property name="text">
+         <string>Index:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSlider" name="indexVoltageSlider">
+        <property name="minimum">
+         <number>-100</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QDoubleSpinBox" name="indexVoltageSpinBox">
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="middleVoltageLabel">
+        <property name="text">
+         <string>Middle:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="middleVoltageSlider">
+        <property name="minimum">
+         <number>-100</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="middleVoltageSpinBox">
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="ringVoltageLabel">
+        <property name="text">
+         <string>Ring:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="ringVoltageSlider">
+        <property name="minimum">
+         <number>-100</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="ringVoltageSpinBox">
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="pinkyVoltageLabel">
+        <property name="text">
+         <string>Pinky:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSlider" name="pinkyVoltageSlider">
+        <property name="minimum">
+         <number>-100</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QDoubleSpinBox" name="pinkyVoltageSpinBox">
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="thumb1VoltageLabel">
+        <property name="text">
+         <string>Thumb 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSlider" name="thumb1VoltageSlider">
+        <property name="minimum">
+         <number>-100</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QDoubleSpinBox" name="thumb1VoltageSpinBox">
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="thumb2VoltageLabel">
+        <property name="text">
+         <string>Thumb 2:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSlider" name="thumb2VoltageSlider">
+        <property name="minimum">
+         <number>-100</number>
+        </property>
+        <property name="maximum">
+         <number>100</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QDoubleSpinBox" name="thumb2VoltageSpinBox">
+        <property name="suffix">
+         <string>%</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-100.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>100.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item row="3" column="0">
-    <widget class="QGroupBox" name="jointVelocityCommandGroupBox">
+    <widget class="QGroupBox" name="velocityCommandsGroupBox">
      <property name="title">
       <string>Joint velocity commands</string>
      </property>
-     <layout class="QGridLayout" name="jointVelocityCommandGroupBoxGridLayout">
+     <layout class="QGridLayout" name="velocityCommandsridLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="indexVelocityLabel">
         <property name="text">
@@ -45,6 +1117,9 @@
       </item>
       <item row="0" column="2">
        <widget class="QDoubleSpinBox" name="indexVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -87,6 +1162,9 @@
       </item>
       <item row="1" column="2">
        <widget class="QDoubleSpinBox" name="middleVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -129,6 +1207,9 @@
       </item>
       <item row="2" column="2">
        <widget class="QDoubleSpinBox" name="ringVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -171,6 +1252,9 @@
       </item>
       <item row="3" column="2">
        <widget class="QDoubleSpinBox" name="pinkyVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -213,6 +1297,9 @@
       </item>
       <item row="4" column="2">
        <widget class="QDoubleSpinBox" name="thumb1VelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -255,6 +1342,9 @@
       </item>
       <item row="5" column="2">
        <widget class="QDoubleSpinBox" name="thumb2VelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -275,243 +1365,19 @@
      </layout>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="QGroupBox" name="jointPositionCommandGroupBox">
+   <item row="3" column="2" rowspan="2">
+    <widget class="QGroupBox" name="touchDataGroupBox">
      <property name="title">
-      <string>Joint position commands</string>
+      <string>Touch data</string>
      </property>
-     <layout class="QGridLayout" name="jointPositionCommandGroupBoxGridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="indexPositionLabel">
-        <property name="text">
-         <string>Index:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSlider" name="indexPositionSlider">
-        <property name="maximum">
-         <number>120</number>
-        </property>
-        <property name="value">
-         <number>30</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QDoubleSpinBox" name="indexPostionSpinBox">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="middlePositionLabel">
-        <property name="text">
-         <string>Middle:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSlider" name="middlePositionSlider">
-        <property name="maximum">
-         <number>120</number>
-        </property>
-        <property name="value">
-         <number>30</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QDoubleSpinBox" name="middlePostionSpinBox">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="ringPositionLabel">
-        <property name="text">
-         <string>Ring:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QSlider" name="ringPositionSlider">
-        <property name="maximum">
-         <number>120</number>
-        </property>
-        <property name="value">
-         <number>30</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QDoubleSpinBox" name="ringPostionSpinBox">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="pinkyPositionLabel">
-        <property name="text">
-         <string>Pinky:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QSlider" name="pinkyPositionSlider">
-        <property name="maximum">
-         <number>120</number>
-        </property>
-        <property name="value">
-         <number>30</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QDoubleSpinBox" name="pinkyPostionSpinBox">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="thumb1PositionLabel">
-        <property name="text">
-         <string>Thumb 1:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QSlider" name="thumb1PositionSlider">
-        <property name="minimum">
-         <number>-120</number>
-        </property>
-        <property name="maximum">
-         <number>0</number>
-        </property>
-        <property name="value">
-         <number>-30</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QDoubleSpinBox" name="thumb1PostionSpinBox">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-120.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>0.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>-30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="thumb2PositionLabel">
-        <property name="text">
-         <string>Thumb 2:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QSlider" name="thumb2PositionSlider">
-        <property name="maximum">
-         <number>120</number>
-        </property>
-        <property name="value">
-         <number>40</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QDoubleSpinBox" name="thumb2PostionSpinBox">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>40.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </widget>
    </item>
    <item row="4" column="0">
-    <widget class="QGroupBox" name="jointEffortCommandGroupBox">
+    <widget class="QGroupBox" name="effortCommandsGroupBox">
      <property name="title">
       <string>Joint effort commands</string>
      </property>
-     <layout class="QGridLayout" name="jointEffortCommandGroupBoxGridLayout">
+     <layout class="QGridLayout" name="effortCommandGridLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="indexEffortLabel">
         <property name="text">
@@ -537,6 +1403,9 @@
       </item>
       <item row="0" column="2">
        <widget class="QDoubleSpinBox" name="indexEffortSpinBox">
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -579,6 +1448,9 @@
       </item>
       <item row="1" column="2">
        <widget class="QDoubleSpinBox" name="middleEffortSpinBox">
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -621,6 +1493,9 @@
       </item>
       <item row="2" column="2">
        <widget class="QDoubleSpinBox" name="ringEffortSpinBox">
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -663,6 +1538,9 @@
       </item>
       <item row="3" column="2">
        <widget class="QDoubleSpinBox" name="pinkyEffortSpinBox">
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -705,6 +1583,9 @@
       </item>
       <item row="4" column="2">
        <widget class="QDoubleSpinBox" name="thumb1EffortSpinBox">
+        <property name="suffix">
+         <string> mNm</string>
+        </property>
         <property name="decimals">
          <number>1</number>
         </property>
@@ -747,162 +1628,8 @@
       </item>
       <item row="5" column="2">
        <widget class="QDoubleSpinBox" name="thumb2EffortSpinBox">
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-6.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>6.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="2" column="1" rowspan="3">
-    <widget class="QGroupBox" name="jointStateGroupBox">
-     <property name="title">
-      <string>Joint State</string>
-     </property>
-     <layout class="QGridLayout" name="jointStateGridLayout">
-      <item row="11" column="0">
-       <widget class="QDoubleSpinBox" name="stateVelThumb1SpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QDoubleSpinBox" name="statePosMiddleSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QDoubleSpinBox" name="stateVelMiddleSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="18" column="0">
-       <widget class="QDoubleSpinBox" name="stateEffThumb1SpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-1.200000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>1.200000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QDoubleSpinBox" name="statePosPinkySpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="9" column="0">
-       <widget class="QDoubleSpinBox" name="stateVelRingSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="17" column="0">
-       <widget class="QDoubleSpinBox" name="stateEffPinkySpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
+        <property name="suffix">
+         <string> mNm</string>
         </property>
         <property name="decimals">
          <number>1</number>
@@ -918,332 +1645,6 @@
         </property>
         <property name="value">
          <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QDoubleSpinBox" name="statePosIndexSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="12" column="0">
-       <widget class="QDoubleSpinBox" name="stateVelThumb2SpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="10" column="0">
-       <widget class="QDoubleSpinBox" name="stateVelPinkySpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="14" column="0">
-       <widget class="QDoubleSpinBox" name="stateEffIndexSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-6.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>6.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="19" column="0">
-       <widget class="QDoubleSpinBox" name="stateEffThumb2SpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-6.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>6.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="0">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Velocity</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QDoubleSpinBox" name="statePosRingSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QDoubleSpinBox" name="statePosThumb1SpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-120.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>0.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>-30.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QDoubleSpinBox" name="stateVelIndexSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="16" column="0">
-       <widget class="QDoubleSpinBox" name="stateEffRingSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-6.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>6.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="15" column="0">
-       <widget class="QDoubleSpinBox" name="stateEffMiddleSpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-6.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>6.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QDoubleSpinBox" name="statePosThumb2SpinBox">
-        <property name="readOnly">
-         <bool>true</bool>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <double>120.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>40.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="13" column="0">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Effort</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="2">
-    <widget class="QGroupBox" name="replyModeGroupBox">
-     <property name="title">
-      <string>Reply Mode</string>
-     </property>
-     <layout class="QGridLayout" name="replyModeGridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="replyV1RadioButton">
-        <property name="text">
-         <string>V1</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="replyV2RadioButton">
-        <property name="text">
-         <string>V2</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QRadioButton" name="replyV3RadioButton">
-        <property name="text">
-         <string>V3</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="2">
-    <widget class="QGroupBox" name="controlModeGroupBox">
-     <property name="title">
-      <string>Control Mode</string>
-     </property>
-     <layout class="QGridLayout" name="controlModeGridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="controlPositionRadioButton">
-        <property name="text">
-         <string>Position</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="controlVelocityRadioButton">
-        <property name="text">
-         <string>Velocity</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QRadioButton" name="controlTorqueRadioButton">
-        <property name="text">
-         <string>Torque</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QRadioButton" name="controlReadOnlyRadioButton">
-        <property name="text">
-         <string>Read Only</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
         </property>
        </widget>
       </item>

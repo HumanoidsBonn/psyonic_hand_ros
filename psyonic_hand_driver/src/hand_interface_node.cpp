@@ -2,6 +2,7 @@
 #include "psyonic_hand_driver/hand_ble.h"
 
 #include <ros/ros.h>
+#include <std_msgs/Float64MultiArray.h>
 #include <controller_manager/controller_manager.h>
 #include <psyonic_hand_driver/ChangeControlMode.h>
 #include <psyonic_hand_driver/ChangeReplyMode.h>
@@ -11,10 +12,13 @@
 std::unique_ptr<psyonic_hand_driver::PsyonicHand> hand = nullptr;
 std::unique_ptr<controller_manager::ControllerManager> cm = nullptr;
 
+ros::Subscriber voltage_command_sub;
+
+const std::vector<std::string> NO_CONTROLLERS = {};
 std::vector<std::string> position_controllers;
 std::vector<std::string> velocity_controllers;
 std::vector<std::string> effort_controllers;
-std::vector<std::string> active_controllers;
+std::vector<std::string> active_controllers = NO_CONTROLLERS;
 
 bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psyonic_hand_driver::ChangeControlMode::Response &res)
 {
@@ -47,6 +51,13 @@ bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psy
       hand->setControlMode(psyonic_hand_driver::ControlMode::TORQUE);
       break;
     }
+    case psyonic_hand_driver::ControlMode::VOLTAGE:
+    {
+      cm->switchController(NO_CONTROLLERS, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
+      active_controllers = NO_CONTROLLERS;
+      hand->setControlMode(psyonic_hand_driver::ControlMode::VOLTAGE);
+      break;
+    }
     case psyonic_hand_driver::ControlMode::READ_ONLY:
     {
       cm->switchController({}, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
@@ -60,6 +71,16 @@ bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psy
     }
   }
   return true;
+}
+
+void voltageCommandCallback(const std_msgs::Float64MultiArray::ConstPtr &msg)
+{
+  if (msg->data.size() != 6)
+  {
+    ROS_ERROR("Voltage command must have 6 elements");
+    return;
+  }
+  hand->setVoltageCommand(msg->data[0], msg->data[1], msg->data[2], msg->data[3], msg->data[4], msg->data[5]);
 }
 
 int main(int argc, char **argv)
@@ -109,6 +130,8 @@ int main(int argc, char **argv)
 
   hand = std::make_unique<psyonic_hand_driver::PsyonicHand>();
   cm = std::make_unique<controller_manager::ControllerManager>(hand.get(), cm_nh);
+
+  voltage_command_sub = cm_nh.subscribe("hand_voltage_controller/command", 1, voltageCommandCallback);
 
   ros::ServiceServer change_control_mode_srv = nhp.advertiseService("change_control_mode", changeControlMode);
 

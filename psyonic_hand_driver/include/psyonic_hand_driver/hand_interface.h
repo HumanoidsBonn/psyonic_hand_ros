@@ -17,6 +17,7 @@ struct JointState
   double cmd_pos = 0;
   double cmd_vel = 0;
   double cmd_eff = 0;
+  double cmd_vol = 0;
 };
 
 struct HandJointStates
@@ -77,6 +78,8 @@ public:
 
   bool setControlMode(ControlMode mode);
   bool setReplyMode(ReplyMode mode);
+
+  void setVoltageCommand(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 
   bool connect(const std::string& device);
 

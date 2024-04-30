@@ -55,6 +55,16 @@ bool PsyonicHand::setReplyMode(ReplyMode mode)
   return false;
 }
 
+void PsyonicHand::setVoltageCommand(double index, double middle, double ring, double pinky, double thumb1, double thumb2)
+{
+  joint_states.index.cmd_vol = index;
+  joint_states.middle.cmd_vol = middle;
+  joint_states.ring.cmd_vol = ring;
+  joint_states.pinky.cmd_vol = pinky;
+  joint_states.thumb1.cmd_vol = thumb1;
+  joint_states.thumb2.cmd_vol = thumb2;
+}
+
 bool PsyonicHand::connect(const std::string& device)
 {
   return hand.connect(device);
@@ -70,6 +80,8 @@ std::unique_ptr<HandReply> PsyonicHand::sendCommand()
     return hand.sendVelocities(reply_mode_request, joint_states.index.cmd_vel, joint_states.middle.cmd_vel, joint_states.ring.cmd_vel, joint_states.pinky.cmd_vel, joint_states.thumb2.cmd_vel, joint_states.thumb1.cmd_vel);
   case ControlMode::TORQUE:
     return hand.sendTorque(reply_mode_request, joint_states.index.cmd_eff, joint_states.middle.cmd_eff, joint_states.ring.cmd_eff, joint_states.pinky.cmd_eff, joint_states.thumb2.cmd_eff, joint_states.thumb1.cmd_eff);
+  case ControlMode::VOLTAGE:
+    return hand.sendVoltage(reply_mode_request, joint_states.index.cmd_vol, joint_states.middle.cmd_vol, joint_states.ring.cmd_vol, joint_states.pinky.cmd_vol, joint_states.thumb2.cmd_vol, joint_states.thumb1.cmd_vol);
   case ControlMode::READ_ONLY:
     return hand.queryStatus(reply_mode_request);
   default:
@@ -138,7 +150,9 @@ void PsyonicHand::updateJointStates(const HandReply& reply)
 
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
+  ros::Time now = ros::Time::now();
   std::unique_ptr<HandReply> status = sendCommand();
+  ROS_INFO_STREAM("Time to send command: " << (ros::Time::now() - now).toSec());
 
   if (!status)
   {
@@ -158,7 +172,7 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
     }
   }
 
-  ROS_INFO_STREAM("pos: index: " << joint_states.index.pos <<
+  /*ROS_INFO_STREAM("pos: index: " << joint_states.index.pos <<
                   " middle: " << joint_states.middle.pos <<
                   " ring: " << joint_states.ring.pos <<
                   " pinky: " << joint_states.pinky.pos <<
@@ -177,7 +191,7 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
                   " ring: " << joint_states.ring.eff <<
                   " pinky: " << joint_states.pinky.eff <<
                   " thumb1: " << joint_states.thumb1.eff <<
-                  " thumb2: " << joint_states.thumb2.eff);
+                  " thumb2: " << joint_states.thumb2.eff);*/
 
   /*auto touch = status->v1or2.unpackTouchSensorData()->decode();
   if (!touch)

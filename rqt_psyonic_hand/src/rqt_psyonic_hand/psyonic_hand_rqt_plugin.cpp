@@ -44,7 +44,13 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
     ui.ringEffortSlider,
     ui.pinkyEffortSlider,
     ui.thumb1EffortSlider,
-    ui.thumb2EffortSlider
+    ui.thumb2EffortSlider,
+    ui.indexVoltageSlider,
+    ui.middleVoltageSlider,
+    ui.ringVoltageSlider,
+    ui.pinkyVoltageSlider,
+    ui.thumb1VoltageSlider,
+    ui.thumb2VoltageSlider
   };
 
   joint_spinboxes = {
@@ -65,12 +71,19 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
     ui.ringEffortSpinBox,
     ui.pinkyEffortSpinBox,
     ui.thumb1EffortSpinBox,
-    ui.thumb2EffortSpinBox
+    ui.thumb2EffortSpinBox,
+    ui.indexVoltageSpinBox,
+    ui.middleVoltageSpinBox,
+    ui.ringVoltageSpinBox,
+    ui.pinkyVoltageSpinBox,
+    ui.thumb1VoltageSpinBox,
+    ui.thumb2VoltageSpinBox
   };
 
-  ui.jointPositionCommandGroupBox->setEnabled(false);
-  ui.jointVelocityCommandGroupBox->setEnabled(false);
-  ui.jointEffortCommandGroupBox->setEnabled(false);
+  ui.positionCommandsGroupBox->setEnabled(false);
+  ui.velocityCommandsGroupBox->setEnabled(false);
+  ui.effortCommandsGroupBox->setEnabled(false);
+  ui.voltageCommandsGroupBox->setEnabled(false);
 
   for (size_t i = 0; i < NUM_CONTROLLER_TYPES; ++i)
   {
@@ -107,6 +120,7 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(ui.controlPositionRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
   connect(ui.controlVelocityRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
   connect(ui.controlTorqueRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
+  connect(ui.controlVoltageRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
   connect(ui.controlReadOnlyRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
 }
 
@@ -169,33 +183,45 @@ void PsyonicHandRqtPlugin::controlModeChanged()
   if (ui.controlPositionRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::POSITION_CONTROL;
-    ui.jointVelocityCommandGroupBox->setEnabled(false);
-    ui.jointEffortCommandGroupBox->setEnabled(false);
-    ui.jointPositionCommandGroupBox->setEnabled(true);
+    ui.velocityCommandsGroupBox->setEnabled(false);
+    ui.effortCommandsGroupBox->setEnabled(false);
+    ui.voltageCommandsGroupBox->setEnabled(false);
+    ui.positionCommandsGroupBox->setEnabled(true);
     joint_pubs[0].publish(*pub_msg_map[&joint_pubs[0]]);
   }
   else if (ui.controlVelocityRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::VELOCITY_CONTROL;
-    ui.jointPositionCommandGroupBox->setEnabled(false);
-    ui.jointEffortCommandGroupBox->setEnabled(false);
-    ui.jointVelocityCommandGroupBox->setEnabled(true);
+    ui.positionCommandsGroupBox->setEnabled(false);
+    ui.effortCommandsGroupBox->setEnabled(false);
+    ui.voltageCommandsGroupBox->setEnabled(false);
+    ui.velocityCommandsGroupBox->setEnabled(true);
     joint_pubs[1].publish(*pub_msg_map[&joint_pubs[1]]);
   }
   else if (ui.controlTorqueRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::TORQUE_CONTROL;
-    ui.jointPositionCommandGroupBox->setEnabled(false);
-    ui.jointVelocityCommandGroupBox->setEnabled(false);
-    ui.jointEffortCommandGroupBox->setEnabled(true);
+    ui.positionCommandsGroupBox->setEnabled(false);
+    ui.velocityCommandsGroupBox->setEnabled(false);
+    ui.voltageCommandsGroupBox->setEnabled(false);
+    ui.effortCommandsGroupBox->setEnabled(true);
     joint_pubs[2].publish(*pub_msg_map[&joint_pubs[2]]);
+  }
+  else if (ui.controlVoltageRadioButton->isChecked())
+  {
+    srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::VOLTAGE_CONTROL;
+    ui.positionCommandsGroupBox->setEnabled(false);
+    ui.velocityCommandsGroupBox->setEnabled(false);
+    ui.effortCommandsGroupBox->setEnabled(false);
+    ui.voltageCommandsGroupBox->setEnabled(true);
   }
   else if (ui.controlReadOnlyRadioButton->isChecked())
   {
     srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::READ_ONLY;
-    ui.jointPositionCommandGroupBox->setEnabled(false);
-    ui.jointVelocityCommandGroupBox->setEnabled(false);
-    ui.jointEffortCommandGroupBox->setEnabled(false);
+    ui.positionCommandsGroupBox->setEnabled(false);
+    ui.velocityCommandsGroupBox->setEnabled(false);
+    ui.effortCommandsGroupBox->setEnabled(false);
+    ui.voltageCommandsGroupBox->setEnabled(false);
   }
   else
   {

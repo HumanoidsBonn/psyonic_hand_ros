@@ -7,6 +7,7 @@ add_compile_options(-std=c++17)
 set (CATKIN_DEPENDENCIES
     roscpp
     rospy
+    std_msgs
     hardware_interface
     controller_manager
     serial

@@ -39,7 +39,7 @@ private:
 
   void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg);
 
-  static constexpr size_t NUM_CONTROLLER_TYPES = 3;
+  static constexpr size_t NUM_CONTROLLER_TYPES = 4;
   static constexpr size_t NUM_HAND_JOINTS = 6;
   static constexpr size_t NUM_CONTROLLERS = NUM_CONTROLLER_TYPES * NUM_HAND_JOINTS;
 
@@ -55,19 +55,22 @@ private:
   std::array<std::string, NUM_CONTROLLER_TYPES> CONTROLLER_NAMES = {
     "position",
     "velocity",
-    "effort"
+    "effort",
+    "voltage"
   };
 
   static constexpr std::array<double, NUM_CONTROLLER_TYPES> SLIDER_SPINBOX_RATIOS = {
     1.0,
     1.0,
-    10.0
+    10.0,
+    1.0
   };
 
   static constexpr std::array<double, NUM_CONTROLLER_TYPES> MSG_VALUE_SPINBOX_RATIOS = {
     M_PI / 180.0,
     M_PI / 180.0,
-    1.0
+    0.001,
+    0.01
   };
 
   std::array<ros::Publisher, NUM_CONTROLLER_TYPES> joint_pubs;
