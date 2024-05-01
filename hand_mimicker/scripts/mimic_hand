@@ -1,0 +1,218 @@
+#!/usr/bin/env python
+import roslib
+roslib.load_manifest('hand_mimicker')
+import rospy
+import rospkg
+import sys
+import os
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+import mediapipe as mp
+import numpy as np
+import threading
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+from mediapipe.framework.formats import landmark_pb2
+from sensor_msgs.msg import Image
+from sensor_msgs.msg import CompressedImage
+from std_msgs.msg import Float64MultiArray
+from dynamic_reconfigure.server import Server as ReconfigureServer
+from hand_mimicker.cfg import HandMimickerConfig
+
+
+class SynchronizedObject:
+  def __init__(self):
+    self.obj = None
+    self.co = threading.Condition()
+
+  def put_nowait(self, obj):
+    self.co.acquire()
+    self.obj = obj
+    self.co.notify()
+    self.co.release()
+
+  def get_nowait(self):
+    self.co.acquire()
+    obj = self.obj
+    self.obj = None
+    self.co.release()
+    return obj
+
+  def get(self):
+    self.co.acquire()
+    while self.obj is None:
+      self.co.wait()
+    obj = self.obj
+    self.obj = None
+    self.co.release()
+    return obj
+
+class HandLandmarker:
+  def __init__(self, model_path):
+    self.image_pub = rospy.Publisher("~visualization", Image, queue_size=1)
+    self.joint_command_pub = rospy.Publisher("/hand/hand_position_controller/command", Float64MultiArray, queue_size=1)
+    self.bridge = CvBridge()
+
+    self.image_vis_queue = SynchronizedObject()
+    self.visualization_thread = None
+    self.unpause_visualization = threading.Event()
+    self.stop_visualization = threading.Event()
+    self.visualization_stopped = threading.Event()
+
+    # set parameter default values (will be overwritten by dynamic reconfigure callback)
+    self.image_topic = ''
+    self.use_compressed_image = False
+    self.publish_visualization = True
+    self.display_visualization = False
+
+    self.image_sub = None # subscriber is created in dynamic_reconfigure callback
+
+    self.base_options = python.BaseOptions(model_asset_path=model_path)
+    self.options = vision.HandLandmarkerOptions(base_options=self.base_options, num_hands=1,
+        running_mode=vision.RunningMode.LIVE_STREAM, result_callback=self.process_results,
+        min_hand_detection_confidence=0.5, min_hand_presence_confidence=0.5, min_tracking_confidence=0.5)
+    self.detector = vision.HandLandmarker.create_from_options(self.options)
+
+  def visualizationLoop(self):
+    print('Creating cv2 window')
+    window_name = 'Hand landmarks'
+    cv2.namedWindow(window_name)
+    print('Window successfully created')
+    while not self.stop_visualization.is_set():
+      if not self.unpause_visualization.is_set():
+        print('Pausing visualization')
+        cv2.destroyWindow(window_name)
+        cv2.waitKey(30)
+        self.unpause_visualization.wait()
+        print('Unpausing visualization')
+        cv2.namedWindow(window_name)
+
+      image = self.image_vis_queue.get_nowait()
+      if image is None:
+        cv2.waitKey(30)
+        continue
+
+      cv2.imshow(window_name, image)
+      cv2.waitKey(30)
+    cv2.destroyAllWindows()
+    self.visualization_stopped.set()
+
+  def draw_landmarks_on_image(self, rgb_image, detection_result: mp.tasks.vision.HandLandmarkerResult):
+    if detection_result.hand_landmarks == []:
+        return rgb_image
+    else:
+      hand_landmarks_list = detection_result.hand_landmarks
+      annotated_image = np.copy(rgb_image)
+
+      # Loop through the detected hands to visualize.
+      for idx in range(len(hand_landmarks_list)):
+        hand_landmarks = hand_landmarks_list[idx]
+      
+      # Draw the hand landmarks.
+      hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
+      hand_landmarks_proto.landmark.extend([
+        landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y, z=landmark.z) for landmark in hand_landmarks])
+      mp.solutions.drawing_utils.draw_landmarks(
+        annotated_image,
+        hand_landmarks_proto,
+        mp.solutions.hands.HAND_CONNECTIONS,
+        mp.solutions.drawing_styles.get_default_hand_landmarks_style(),
+        mp.solutions.drawing_styles.get_default_hand_connections_style())
+      return annotated_image
+  
+  def compute_angle(self, p1, p2, p3):
+    v1 = np.array([p2.x - p1.x, p2.y - p1.y, p2.z - p1.z])
+    v2 = np.array([p3.x - p2.x, p3.y - p2.y, p3.z - p2.z])
+    angle = np.arccos(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+    return angle
+    
+  def publish_joint_angles(self, results):
+    # mp.tasks.vision.HandLandmarkerResult(
+    # handedness: List[List[category_module.Category]],
+    # hand_landmarks: List[List[landmark_module.NormalizedLandmark]],
+    # hand_world_landmarks: List[List[landmark_module.Landmark]])
+    if len(results.hand_world_landmarks) == 0:
+      return
+    
+    # Process the first hand
+    hand_points = results.hand_world_landmarks[0]
+    index_angle = self.compute_angle(hand_points[5], hand_points[6], hand_points[7])
+    middle_angle = self.compute_angle(hand_points[9], hand_points[10], hand_points[11])
+    ring_angle = self.compute_angle(hand_points[13], hand_points[14], hand_points[15])
+    pinky_angle = self.compute_angle(hand_points[17], hand_points[18], hand_points[19])
+    thumb1_angle = self.compute_angle(hand_points[1], hand_points[2], hand_points[3])
+    thumb2_angle = self.compute_angle(hand_points[2], hand_points[3], hand_points[4])
+
+    joint_angles = Float64MultiArray()
+    joint_angles.data = [index_angle, middle_angle, ring_angle, pinky_angle, -thumb1_angle, thumb2_angle]
+    self.joint_command_pub.publish(joint_angles)
+
+  def process_results(self, results, image, timestamp):
+    self.publish_joint_angles(results)
+    if self.publish_visualization or self.display_visualization:
+      annotated_image = self.draw_landmarks_on_image(image.numpy_view(), results)
+      if self.publish_visualization:
+        image_msg = self.bridge.cv2_to_imgmsg(annotated_image, "bgr8")
+        image_msg.header.stamp = rospy.Time.from_sec(timestamp / 1000000.0)
+        self.image_pub.publish(image_msg)
+      if self.display_visualization:
+        self.image_vis_queue.put_nowait(annotated_image) 
+    return results
+
+  def detect_landmarks(self, image_msg):
+    cv_image = None
+    try:
+      if self.use_compressed_image:
+        np_arr = np.fromstring(image_msg.data, np.uint8)
+        cv_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+      else:
+        cv_image = self.bridge.imgmsg_to_cv2(image_msg, "bgr8")
+    except CvBridgeError as e:
+      print(e)
+      return
+    
+    timestamp = image_msg.header.stamp.to_nsec() // 1000 # convert to microseconds
+    image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv_image)
+    self.detector.detect_async(image, timestamp)
+
+  def reconfigure_callback(self, config, level):
+    if level & (1 << 0): # image_topic / use_compressed_image
+      if self.image_sub is not None:
+        self.image_sub.unregister()
+      self.use_compressed_image = config.use_compressed_image
+      if self.use_compressed_image:
+        self.image_topic = config.image_topic + '/compressed'
+        self.image_sub = rospy.Subscriber(self.image_topic, CompressedImage, self.detect_landmarks, queue_size=1, buff_size=2**24)
+      else:
+        self.image_topic = config.image_topic
+        self.image_sub = rospy.Subscriber(self.image_topic, Image, self.detect_landmarks, queue_size=1, buff_size=2**24)
+      print('Subscribed to ' + self.image_topic)
+    if level & (1 << 1): # publish_visualization
+      self.publish_visualization = config.publish_visualization
+    if level & (1 << 2): # display_visualization
+      self.display_visualization = config.display_visualization
+      if self.display_visualization:
+        self.unpause_visualization.set()
+        if self.visualization_thread is None: # first time visualization
+          print('Creating thread')
+          self.visualization_thread = threading.Thread(target=self.visualizationLoop)
+          self.visualization_thread.daemon = True
+          self.visualization_thread.start()
+          print('Thread was started')
+      else:
+        self.unpause_visualization.clear()
+
+    return config
+
+def main(args):
+  rospy.init_node('mimic_hand')
+  rospack = rospkg.RosPack()
+  hand_mimicker_path = rospack.get_path('hand_mimicker')
+  
+  model_path = rospy.get_param('~model_path', os.path.join(hand_mimicker_path, "models/hand_landmarker.task"))
+  landmarker = HandLandmarker(model_path)
+  srv = ReconfigureServer(HandMimickerConfig, landmarker.reconfigure_callback)
+  rospy.spin()
+
+if __name__ == "__main__":
+    main(sys.argv)
