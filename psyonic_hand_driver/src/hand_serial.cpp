@@ -166,7 +166,7 @@ std::unique_ptr<HandReply> HandSerial::receive(const ros::Duration &timeout)
     read_ind = 1;
     while ((read_ind < 2 || buffer[read_ind - 1] != 0x7E) && ros::Time::now() - start < timeout)
     {
-      size_t read_bytes = sp.read(buffer.data() + read_ind, BUF_SIZE - read_ind);
+      size_t read_bytes = sp.read(buffer.data() + read_ind, 1); // read 1 byte at a time
       read_ind += read_bytes;
     }
     if (read_ind < 2 || buffer[read_ind - 1] != 0x7E)
