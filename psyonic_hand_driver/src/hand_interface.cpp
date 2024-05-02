@@ -150,19 +150,12 @@ void PsyonicHand::updateJointStates(const HandReply& reply)
 
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
-  ros::Time now = ros::Time::now();
-  std::unique_ptr<HandReply> status = sendCommand();
-  ROS_INFO_STREAM("Time to send command: " << (ros::Time::now() - now).toSec());
-
-  if (!status)
+  if (!status) // first read
   {
-    ROS_ERROR("Failed to read hand status");
-    return;
+    status = hand.queryStatus(reply_mode_request);
   }
 
-  ROS_INFO_STREAM("Reply header: " << to_string(status->v1or2.header));
-
-  updateJointStates(*status);
+  updateJointStates(*status); // use status obtained from last command sent
 
   if (control_mode == ControlMode::READ_ONLY)
   {
@@ -210,13 +203,12 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 
 void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
 {
-  std::unique_ptr<HandReply> status = sendCommand();
+  status = sendCommand();
   if (!status)
   {
     ROS_ERROR("Failed to send hand command");
     return;
   }
-  updateJointStates(*status);
 }
 
 } // namespace psyonic_hand_driver

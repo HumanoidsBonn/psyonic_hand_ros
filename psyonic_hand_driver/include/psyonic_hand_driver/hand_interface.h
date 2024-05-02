@@ -66,6 +66,8 @@ private:
   HandSerial hand;
   bool command_received = false;
 
+  std::unique_ptr<HandReply> status = nullptr;
+
 public:
   ControlMode control_mode = ControlMode::READ_ONLY;
   ReplyMode reply_mode_request = ReplyMode::V3;
