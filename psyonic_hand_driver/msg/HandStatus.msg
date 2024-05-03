@@ -1,0 +1,2 @@
+bool serial_connected
+bool bluetooth_connected

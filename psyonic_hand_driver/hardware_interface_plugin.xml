@@ -1,0 +1,7 @@
+<library path="lib/libpsyonic_hand_driver_plugin">
+  <class name="psyonic_hand_driver/PysonicHand" type="psyonic_hand_driver::PysonicHand" base_class_type="hardware_interface::RobotHW">
+    <description>
+      Psyonic hand hardware interface plugin
+    </description>
+  </class>
+</library>

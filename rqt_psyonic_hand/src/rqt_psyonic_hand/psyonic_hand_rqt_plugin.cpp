@@ -2,6 +2,7 @@
 
 #include <pluginlib/class_list_macros.h>
 
+#include <psyonic_hand_driver/ChangeControlInterface.h>
 #include <psyonic_hand_driver/ChangeControlMode.h>
 #include <psyonic_hand_driver/ChangeReplyMode.h>
 
@@ -105,9 +106,11 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
   }
 
   connect(this, &PsyonicHandRqtPlugin::jointStateUpdated, this, &PsyonicHandRqtPlugin::updateJointStateGUI);
+  connect(this, &PsyonicHandRqtPlugin::controlInterfaceUpdated, this, &PsyonicHandRqtPlugin::updateControlInterfaceGUI);
   connect(this, &PsyonicHandRqtPlugin::controlModeUpdated, this, &PsyonicHandRqtPlugin::updateControlModeGUI);
   connect(this, &PsyonicHandRqtPlugin::replyModeUpdated, this, &PsyonicHandRqtPlugin::updateReplyModeGUI);
   joint_state_sub = getNodeHandle().subscribe("/hand/joint_states", 1, &PsyonicHandRqtPlugin::jointStateCallback, this);
+  control_interface_sub = getNodeHandle().subscribe("/hand_interface/control_interface", 1, &PsyonicHandRqtPlugin::controlInterfaceCallback, this);
   control_mode_sub = getNodeHandle().subscribe("/hand_interface/control_mode", 1, &PsyonicHandRqtPlugin::controlModeCallback, this);
   reply_mode_sub = getNodeHandle().subscribe("/hand_interface/reply_mode", 1, &PsyonicHandRqtPlugin::replyModeCallback, this);
 
@@ -118,10 +121,13 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
     connect(joint_spinboxes[i], &QDoubleSpinBox::editingFinished, this, &PsyonicHandRqtPlugin::jointCommandSpinBoxEdited);
   }
 
+  change_control_interface_client = getNodeHandle().serviceClient<psyonic_hand_driver::ChangeControlInterface>("/hand_interface/change_control_interface");
   change_control_mode_client = getNodeHandle().serviceClient<psyonic_hand_driver::ChangeControlMode>("/hand_interface/change_control_mode");
   change_reply_mode_client = getNodeHandle().serviceClient<psyonic_hand_driver::ChangeReplyMode>("/hand_interface/change_reply_mode");
 
   // connect control mode radio buttons
+  connect(ui.interfaceSerialRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlInterfaceChanged);
+  connect(ui.interfaceBleRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlInterfaceChanged);
   connect(ui.controlPositionRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
   connect(ui.controlVelocityRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
   connect(ui.controlTorqueRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlModeChanged);
@@ -164,6 +170,12 @@ void PsyonicHandRqtPlugin::jointStateCallback(const sensor_msgs::JointState::Con
   emit jointStateUpdated();
 }
 
+void PsyonicHandRqtPlugin::controlInterfaceCallback(const psyonic_hand_driver::ControlInterfaceMsg::ConstPtr& msg)
+{
+  control_interface_msg = *msg;
+  emit controlInterfaceUpdated();
+}
+
 void PsyonicHandRqtPlugin::controlModeCallback(const psyonic_hand_driver::ControlModeMsg::ConstPtr& msg)
 {
   control_mode_msg = *msg;
@@ -200,6 +212,34 @@ void PsyonicHandRqtPlugin::jointCommandSpinBoxEdited()
   slider->setValue(static_cast<int>(value * slider_spinbox_ratio_map[slider]));
   *msg_value = value * msg_value_spinbox_ratio_map[spinbox];
   pub->publish(*pub_msg_map[pub]);
+}
+
+void PsyonicHandRqtPlugin::controlInterfaceChanged()
+{
+  psyonic_hand_driver::ChangeControlInterface srv;
+  if (ui.interfaceSerialRadioButton->isChecked())
+  {
+    srv.request.control_interface = psyonic_hand_driver::ChangeControlInterface::Request::SERIAL;
+  }
+  else if (ui.interfaceBleRadioButton->isChecked())
+  {
+    srv.request.control_interface = psyonic_hand_driver::ChangeControlInterface::Request::BLE;
+  }
+  else
+  {
+    ROS_ERROR("Unknown control interface");
+    return;
+  }
+  if (!change_control_interface_client.call(srv))
+  {
+    ROS_ERROR("Failed to call service /hand_interface/change_control_interface");
+    return;
+  }
+  if (!srv.response.success)
+  {
+    ROS_ERROR("Failed to change control interface");
+    return;
+  }
 }
 
 void PsyonicHandRqtPlugin::controlModeChanged()
@@ -298,6 +338,22 @@ void PsyonicHandRqtPlugin::updateJointStateGUI()
   ui.stateEffPinkySpinBox->setValue(joint_state_msg.effort[3] / MSG_VALUE_SPINBOX_RATIOS[2]);
   ui.stateEffThumb1SpinBox->setValue(joint_state_msg.effort[4] / MSG_VALUE_SPINBOX_RATIOS[2]);
   ui.stateEffThumb2SpinBox->setValue(joint_state_msg.effort[5] / MSG_VALUE_SPINBOX_RATIOS[2]);
+}
+
+void PsyonicHandRqtPlugin::updateControlInterfaceGUI()
+{
+  switch (control_interface_msg.control_interface)
+  {
+    case psyonic_hand_driver::ControlInterfaceMsg::SERIAL:
+      ui.interfaceSerialRadioButton->setChecked(true);
+      break;
+    case psyonic_hand_driver::ControlInterfaceMsg::BLE:
+      ui.interfaceBleRadioButton->setChecked(true);
+      break;
+    default:
+      ROS_ERROR("Unknown control interface");
+      return;
+  }
 }
 
 void PsyonicHandRqtPlugin::updateControlModeGUI()

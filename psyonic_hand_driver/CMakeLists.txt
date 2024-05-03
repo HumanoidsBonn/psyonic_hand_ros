@@ -7,6 +7,7 @@ add_compile_options(-std=c++17)
 set (CATKIN_DEPENDENCIES
     roscpp
     rospy
+    pluginlib
     std_msgs
     hardware_interface
     controller_manager
@@ -60,6 +61,7 @@ add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 # )
 add_message_files(
   FILES
+  ControlInterfaceMsg.msg
   ControlModeMsg.msg
   ReplyModeMsg.msg
 )
@@ -72,6 +74,7 @@ add_message_files(
 # )
 add_service_files(
   FILES
+  ChangeControlInterface.srv
   ChangeControlMode.srv
   ChangeReplyMode.srv
 )
@@ -121,7 +124,7 @@ generate_messages()
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
    INCLUDE_DIRS include
-#  LIBRARIES psyonic_hand_driver
+   LIBRARIES ${PROJECT_NAME}_plugin
    CATKIN_DEPENDS ${CATKIN_DEPENDENCIES} message_runtime
 #  DEPENDS system_lib
 )
@@ -129,6 +132,13 @@ catkin_package(
 ###########
 ## Build ##
 ###########
+
+set (HAND_INTERFACE_SOURCES
+    src/hand_interface.cpp
+    src/hand_serial.cpp
+    src/hand_serial_data.cpp
+    src/hand_ble.cpp
+)
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
@@ -141,16 +151,19 @@ include_directories(
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/psyonic_hand_driver.cpp
 # )
+add_library(${PROJECT_NAME}_plugin ${HAND_INTERFACE_SOURCES})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_plugin ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}_plugin ${catkin_LIBRARIES} simpleble::simpleble)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_interface src/hand_interface_node.cpp src/hand_interface.cpp src/hand_serial.cpp src/hand_serial_data.cpp src/hand_ble.cpp)
+add_executable(${PROJECT_NAME}_interface src/hand_interface_node.cpp ${HAND_INTERFACE_SOURCES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

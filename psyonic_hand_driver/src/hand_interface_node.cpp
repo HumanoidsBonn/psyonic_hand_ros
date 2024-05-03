@@ -4,8 +4,10 @@
 #include <ros/ros.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <controller_manager/controller_manager.h>
+#include <psyonic_hand_driver/ControlInterfaceMsg.h>
 #include <psyonic_hand_driver/ControlModeMsg.h>
 #include <psyonic_hand_driver/ReplyModeMsg.h>
+#include <psyonic_hand_driver/ChangeControlInterface.h>
 #include <psyonic_hand_driver/ChangeControlMode.h>
 #include <psyonic_hand_driver/ChangeReplyMode.h>
 
@@ -19,6 +21,34 @@ std::vector<std::string> position_controllers;
 std::vector<std::string> velocity_controllers;
 std::vector<std::string> effort_controllers;
 std::vector<std::string> active_controllers = NO_CONTROLLERS;
+
+bool changeControlInterface(psyonic_hand_driver::ChangeControlInterface::Request &req, psyonic_hand_driver::ChangeControlInterface::Response &res)
+{
+  auto requested_interface = static_cast<psyonic_hand_driver::ControlInterface>(req.control_interface);
+  if (requested_interface == hand->getControlInterface())
+  {
+    res.success = true;
+    return true;
+  }
+  if (requested_interface == psyonic_hand_driver::ControlInterface::SERIAL)
+  {
+    res.success = hand->setControlInterface(requested_interface);
+  }
+  else if (requested_interface == psyonic_hand_driver::ControlInterface::BLE)
+  {
+    if (hand->getControlMode() != psyonic_hand_driver::ControlMode::POSITION)
+    {
+      hand->setControlMode(psyonic_hand_driver::ControlMode::POSITION);
+    }
+    res.success = hand->setControlInterface(requested_interface);
+  }
+  else
+  {
+    ROS_ERROR_STREAM("Unknown control interface: " << static_cast<int>(requested_interface));
+    res.success = false;
+  }
+  return true;
+}
 
 bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psyonic_hand_driver::ChangeControlMode::Response &res)
 {
@@ -139,15 +169,21 @@ int main(int argc, char **argv)
 
   hand_ble.sendCommand("g08:0.20");*/
   
+  const double max_frequency = nhp.param<double>("max_frequency", 100.0);
   const std::string device = nhp.param<std::string>("device", "usb-FTDI_TTL232R_FTAM6SIZ-if00-port0");
+  const bool use_ble = nhp.param<bool>("use_ble", true);
 
   hand = std::make_unique<psyonic_hand_driver::PsyonicHand>();
   cm = std::make_unique<controller_manager::ControllerManager>(hand.get(), cm_nh);
 
   ros::Subscriber voltage_command_sub = cm_nh.subscribe("hand_voltage_controller/command", 1, voltageCommandCallback);
 
+  ros::Publisher control_interface_pub = nhp.advertise<psyonic_hand_driver::ControlInterfaceMsg>("control_interface", 1, true);
   ros::Publisher control_mode_pub = nhp.advertise<psyonic_hand_driver::ControlModeMsg>("control_mode", 1, true);
   ros::Publisher reply_mode_pub = nhp.advertise<psyonic_hand_driver::ReplyModeMsg>("reply_mode", 1, true);
+
+  psyonic_hand_driver::ControlInterfaceMsg control_interface_msg;
+  control_interface_msg.control_interface = static_cast<uint8_t>(hand->getControlInterface());
 
   psyonic_hand_driver::ControlModeMsg control_mode_msg;
   control_mode_msg.control_mode = static_cast<uint8_t>(hand->getControlMode());
@@ -155,19 +191,30 @@ int main(int argc, char **argv)
   psyonic_hand_driver::ReplyModeMsg reply_mode_msg;
   reply_mode_msg.reply_mode = static_cast<uint8_t>(hand->getReplyMode());
 
+  ros::ServiceServer change_control_interface_srv = nhp.advertiseService("change_control_interface", changeControlInterface);
   ros::ServiceServer change_control_mode_srv = nhp.advertiseService("change_control_mode", changeControlMode);
   ros::ServiceServer change_reply_mode_srv = nhp.advertiseService("change_reply_mode", changeReplyMode);
 
-  if (!hand->connect(device))
+  if (!hand->connectSerial(device))
   {
     ROS_ERROR("Failed to connect to hand");
     return 1;
   }
 
+  if (use_ble)
+  {
+    if (!hand->connectBLE(ros::Duration(5.0)))
+    {
+      ROS_ERROR("Failed to connect bluetooth");
+    }
+  }
+
   ros::Time last_read_time = ros::Time::now();
   ros::Time last_update_time = ros::Time::now();
   ros::Time last_write_time = ros::Time::now();
-  while(ros::ok())
+  /*ros::Time loop_freq_measure_time = ros::Time::now();
+  size_t loop_count = 0;*/
+  for(ros::Rate r(max_frequency); ros::ok(); r.sleep())
   {
     ros::Time read_time = ros::Time::now();
     hand->read(read_time, read_time - last_read_time);
@@ -178,11 +225,26 @@ int main(int argc, char **argv)
     ros::Time write_time = ros::Time::now();
     hand->write(write_time, write_time - last_write_time);
     last_write_time = write_time;
+
+    control_interface_msg.control_interface = static_cast<uint8_t>(hand->getControlInterface());
+    control_interface_pub.publish(control_interface_msg);
     control_mode_msg.control_mode = static_cast<uint8_t>(hand->getControlMode());
     control_mode_pub.publish(control_mode_msg);
     reply_mode_msg.reply_mode = static_cast<uint8_t>(hand->getReplyMode());
     reply_mode_pub.publish(reply_mode_msg);
+
+    /*ros::Time cur_loop_time = ros::Time::now();
+    loop_count++;
+    if (cur_loop_time - loop_freq_measure_time > ros::Duration(1.0))
+    {
+      ROS_INFO_STREAM("Loop frequency: " << loop_count << " Hz");
+      loop_count = 0;
+      loop_freq_measure_time = cur_loop_time;
+    }*/
   }
+
+  hand->disconnectBLE();
+  ROS_INFO_STREAM("Disconnected from hand");
 
   return 0;
 }

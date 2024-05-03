@@ -4,6 +4,7 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <sensor_msgs/JointState.h>
+#include <psyonic_hand_driver/ControlInterfaceMsg.h>
 #include <psyonic_hand_driver/ControlModeMsg.h>
 #include <psyonic_hand_driver/ReplyModeMsg.h>
 
@@ -29,15 +30,18 @@ private slots:
   // UI slots
   void jointCommandSliderMoved(int value);
   void jointCommandSpinBoxEdited();
+  void controlInterfaceChanged();
   void controlModeChanged();
   void replyModeChanged();
   void updateJointStateGUI();
+  void updateControlInterfaceGUI();
   void updateControlModeGUI();
   void updateReplyModeGUI();
   void updateJointCommandGUI();
 
 signals:
   void jointStateUpdated();
+  void controlInterfaceUpdated();
   void controlModeUpdated();
   void replyModeUpdated();
 
@@ -46,6 +50,7 @@ private:
   QWidget* widget;
 
   void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg);
+  void controlInterfaceCallback(const psyonic_hand_driver::ControlInterfaceMsg::ConstPtr& msg);
   void controlModeCallback(const psyonic_hand_driver::ControlModeMsg::ConstPtr& msg);
   void replyModeCallback(const psyonic_hand_driver::ReplyModeMsg::ConstPtr& msg);
 
@@ -90,11 +95,14 @@ private:
 
   ros::Subscriber joint_state_sub;
   sensor_msgs::JointState joint_state_msg;
+  ros::Subscriber control_interface_sub;
+  psyonic_hand_driver::ControlInterfaceMsg control_interface_msg;
   ros::Subscriber control_mode_sub;
   psyonic_hand_driver::ControlModeMsg control_mode_msg;
   ros::Subscriber reply_mode_sub;
   psyonic_hand_driver::ReplyModeMsg reply_mode_msg;
 
+  ros::ServiceClient change_control_interface_client;
   ros::ServiceClient change_control_mode_client;
   ros::ServiceClient change_reply_mode_client;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hand_serial.h"
+#include "hand_ble.h"
 
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
@@ -8,6 +9,12 @@
 
 namespace psyonic_hand_driver
 {
+
+enum class ControlInterface
+{
+  SERIAL = 0,
+  BLE = 1
+};
 
 struct JointState
 {
@@ -63,27 +70,36 @@ private:
   hardware_interface::VelocityJointInterface jnt_vel_interface;
   hardware_interface::EffortJointInterface jnt_eff_interface;
 
-  HandSerial hand;
+  ControlInterface control_interface = ControlInterface::SERIAL;
+  ControlMode control_mode = ControlMode::READ_ONLY;
+  ReplyMode reply_mode_request = ReplyMode::V3;
+  HandSerial hand_serial;
+  HandBLE hand_ble;
   bool command_received = false;
 
   std::unique_ptr<HandReply> status = nullptr;
 
 public:
-  ControlMode control_mode = ControlMode::READ_ONLY;
-  ReplyMode reply_mode_request = ReplyMode::V3;
-
   PsyonicHand();
   virtual ~PsyonicHand();
 
+  ControlInterface getControlInterface() const { return control_interface; }
   ControlMode getControlMode() const { return control_mode; }
   ReplyMode getReplyMode() const { return reply_mode_request; }
 
+  bool setControlInterface(ControlInterface interface);
   bool setControlMode(ControlMode mode);
   bool setReplyMode(ReplyMode mode);
 
   void setVoltageCommand(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 
-  bool connect(const std::string& device);
+  void writePositionBLE(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
+
+  bool connectSerial(const std::string& device);
+  bool connectBLE(const ros::Duration &timeout);
+
+  bool disconnectSerial();
+  bool disconnectBLE();
 
   /**
    * \brief Send command, depending on control mode

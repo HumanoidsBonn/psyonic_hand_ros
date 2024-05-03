@@ -26,6 +26,26 @@ static inline int16_t safeCast(double val)
   }
 }
 
+static inline uint16_t safeCastU(double val)
+{
+  if (std::isnan(val))
+  {
+    return 0;
+  }
+  else if (val > 65535.0)
+  {
+    return 65535;
+  }
+  else if (val < 0.0)
+  {
+    return 0;
+  }
+  else
+  {
+    return static_cast<uint16_t>(val);
+  }
+}
+
 static inline double posToDegrees(int16_t pos)
 {
   return static_cast<double>(pos) * 150.0 / 32767.0;
@@ -44,6 +64,11 @@ static inline double posToRad(int16_t pos)
 static inline int16_t radToPos(double rad)
 {
   return safeCast(rad * 39320.4 / M_PI);
+}
+
+static inline uint16_t secondsToTime(double seconds)
+{
+  return safeCastU(seconds * 65535.0 / 300.0);
 }
 
 static inline double fingerVelToDegreesPerSec(int16_t vel)

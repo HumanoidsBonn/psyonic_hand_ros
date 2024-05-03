@@ -95,6 +95,20 @@ bool HandSerial::connect(const std::string &id)
   return true;
 }
 
+bool HandSerial::disconnect()
+{
+  try
+  {
+    sp.close();
+  }
+  catch(const serial::IOException &ex)
+  {
+    ROS_ERROR_STREAM(ex.what());
+    return false;
+  }
+  return true;
+}
+
 std::unique_ptr<HandReply> HandSerial::PPP_unstuff(const std::vector<uint8_t> &stuffed_data)
 {
   auto res = std::make_unique<HandReply>();

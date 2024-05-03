@@ -1,6 +1,7 @@
 #include "psyonic_hand_driver/hand_interface.h"
 
 #include <ros/ros.h>
+#include <pluginlib/class_list_macros.hpp>
 
 namespace psyonic_hand_driver
 {
@@ -35,6 +36,26 @@ PsyonicHand::~PsyonicHand()
 {
 }
 
+bool PsyonicHand::setControlInterface(ControlInterface interface)
+{
+  if (interface == ControlInterface::SERIAL)
+  {
+    control_interface = ControlInterface::SERIAL;
+    return true;
+  }
+  else if (interface == ControlInterface::BLE)
+  {
+    if (!hand_ble.isConnected())
+    {
+      ROS_ERROR("Cannot set control interface to BLE; hand is not connected");
+      return false;
+    }
+    control_interface = ControlInterface::BLE;
+    return true;
+  }
+  return false;
+}
+
 bool PsyonicHand::setControlMode(ControlMode mode)
 {
   if (mode == ControlMode::POSITION || mode == ControlMode::VELOCITY || mode == ControlMode::TORQUE || mode == ControlMode::VOLTAGE || mode == ControlMode::READ_ONLY)
@@ -65,9 +86,55 @@ void PsyonicHand::setVoltageCommand(double index, double middle, double ring, do
   joint_states.thumb2.cmd_vol = thumb2;
 }
 
-bool PsyonicHand::connect(const std::string& device)
+void PsyonicHand::writePositionBLE(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
 {
-  return hand.connect(device);
+  hand_ble.sendPositionCommand(index, middle, ring, pinky, thumb_flexor, thumb_rotator);
+}
+
+bool PsyonicHand::connectSerial(const std::string& device)
+{
+  return hand_serial.connect(device);
+}
+
+bool PsyonicHand::connectBLE(const ros::Duration &timeout)
+{
+  hand_ble.startScanForHand();
+  bool hand_found = false;
+  ros::Time start = ros::Time::now();
+  while (ros::ok() && ros::Time::now() - start < timeout)
+  {
+    ROS_INFO_THROTTLE(1, "Scanning for hand...");
+    hand_found = hand_ble.deviceFound();
+    if (hand_found)
+    {
+      ROS_INFO("Found hand");
+      break;
+    }
+  }
+  hand_ble.stopScanForHand();
+  if (!hand_found)
+  {
+    ROS_ERROR_STREAM("Failed to find hand");
+    return false;
+  }
+  bool connected = hand_ble.connect();
+  if (!connected)
+  {
+    ROS_ERROR("Failed to connect to hand");
+    return false;
+  }
+  return true;
+}
+
+bool PsyonicHand::disconnectSerial()
+{
+  return hand_serial.disconnect();
+
+}
+
+bool PsyonicHand::disconnectBLE()
+{
+  return hand_ble.disconnect();
 }
 
 std::unique_ptr<HandReply> PsyonicHand::sendCommand()
@@ -75,15 +142,15 @@ std::unique_ptr<HandReply> PsyonicHand::sendCommand()
   switch (control_mode)
   {
   case ControlMode::POSITION:
-    return hand.sendPositions(reply_mode_request, joint_states.index.cmd_pos, joint_states.middle.cmd_pos, joint_states.ring.cmd_pos, joint_states.pinky.cmd_pos, joint_states.thumb2.cmd_pos, joint_states.thumb1.cmd_pos);
+    return hand_serial.sendPositions(reply_mode_request, joint_states.index.cmd_pos, joint_states.middle.cmd_pos, joint_states.ring.cmd_pos, joint_states.pinky.cmd_pos, joint_states.thumb2.cmd_pos, joint_states.thumb1.cmd_pos);
   case ControlMode::VELOCITY:
-    return hand.sendVelocities(reply_mode_request, joint_states.index.cmd_vel, joint_states.middle.cmd_vel, joint_states.ring.cmd_vel, joint_states.pinky.cmd_vel, joint_states.thumb2.cmd_vel, joint_states.thumb1.cmd_vel);
+    return hand_serial.sendVelocities(reply_mode_request, joint_states.index.cmd_vel, joint_states.middle.cmd_vel, joint_states.ring.cmd_vel, joint_states.pinky.cmd_vel, joint_states.thumb2.cmd_vel, joint_states.thumb1.cmd_vel);
   case ControlMode::TORQUE:
-    return hand.sendTorque(reply_mode_request, joint_states.index.cmd_eff, joint_states.middle.cmd_eff, joint_states.ring.cmd_eff, joint_states.pinky.cmd_eff, joint_states.thumb2.cmd_eff, joint_states.thumb1.cmd_eff);
+    return hand_serial.sendTorque(reply_mode_request, joint_states.index.cmd_eff, joint_states.middle.cmd_eff, joint_states.ring.cmd_eff, joint_states.pinky.cmd_eff, joint_states.thumb2.cmd_eff, joint_states.thumb1.cmd_eff);
   case ControlMode::VOLTAGE:
-    return hand.sendVoltage(reply_mode_request, joint_states.index.cmd_vol, joint_states.middle.cmd_vol, joint_states.ring.cmd_vol, joint_states.pinky.cmd_vol, joint_states.thumb2.cmd_vol, joint_states.thumb1.cmd_vol);
+    return hand_serial.sendVoltage(reply_mode_request, joint_states.index.cmd_vol, joint_states.middle.cmd_vol, joint_states.ring.cmd_vol, joint_states.pinky.cmd_vol, joint_states.thumb2.cmd_vol, joint_states.thumb1.cmd_vol);
   case ControlMode::READ_ONLY:
-    return hand.queryStatus(reply_mode_request);
+    return hand_serial.queryStatus(reply_mode_request);
   default:
     ROS_ERROR("Unknown control mode");
     return nullptr;
@@ -150,9 +217,15 @@ void PsyonicHand::updateJointStates(const HandReply& reply)
 
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
-  if (!status) // first read
+  if (!status) // first read / last command failed
   {
-    status = hand.queryStatus(reply_mode_request);
+    status = hand_serial.queryStatus(reply_mode_request);
+  }
+
+  if (!status)
+  {
+    ROS_ERROR("Failed to read hand status");
+    return;
   }
 
   updateJointStates(*status); // use status obtained from last command sent
@@ -203,6 +276,18 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 
 void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
 {
+  if (control_interface == ControlInterface::BLE)
+  {
+    if (control_mode == ControlMode::POSITION)
+    {
+      hand_ble.sendPositionCommand(joint_states.index.cmd_pos, joint_states.middle.cmd_pos, joint_states.ring.cmd_pos, joint_states.pinky.cmd_pos, joint_states.thumb2.cmd_pos, joint_states.thumb1.cmd_pos);
+      status = nullptr; // query status in read over serial for now
+    }
+    else
+    {
+      ROS_ERROR_THROTTLE(1, "Only position control is supported over BLE; using serial");
+    }
+  }
   status = sendCommand();
   if (!status)
   {
@@ -212,3 +297,5 @@ void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
 }
 
 } // namespace psyonic_hand_driver
+
+PLUGINLIB_EXPORT_CLASS(psyonic_hand_driver::PsyonicHand, hardware_interface::RobotHW)
