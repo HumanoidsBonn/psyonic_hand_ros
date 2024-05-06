@@ -146,8 +146,10 @@ void PsyonicHandRqtPlugin::shutdownPlugin()
     joint_pubs[i].shutdown();
   }
   joint_state_sub.shutdown();
+  control_interface_sub.shutdown();
   control_mode_sub.shutdown();
   reply_mode_sub.shutdown();
+  change_control_interface_client.shutdown();
   change_control_mode_client.shutdown();
   change_reply_mode_client.shutdown();
 }

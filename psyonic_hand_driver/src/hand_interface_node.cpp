@@ -38,6 +38,8 @@ bool changeControlInterface(psyonic_hand_driver::ChangeControlInterface::Request
   {
     if (hand->getControlMode() != psyonic_hand_driver::ControlMode::POSITION)
     {
+      cm->switchController(position_controllers, active_controllers, controller_manager_msgs::SwitchController::Request::STRICT);
+      active_controllers = position_controllers;
       hand->setControlMode(psyonic_hand_driver::ControlMode::POSITION);
     }
     res.success = hand->setControlInterface(requested_interface);
@@ -212,8 +214,8 @@ int main(int argc, char **argv)
   ros::Time last_read_time = ros::Time::now();
   ros::Time last_update_time = ros::Time::now();
   ros::Time last_write_time = ros::Time::now();
-  /*ros::Time loop_freq_measure_time = ros::Time::now();
-  size_t loop_count = 0;*/
+  ros::Time loop_freq_measure_time = ros::Time::now();
+  size_t loop_count = 0;
   for(ros::Rate r(max_frequency); ros::ok(); r.sleep())
   {
     ros::Time read_time = ros::Time::now();
@@ -233,14 +235,14 @@ int main(int argc, char **argv)
     reply_mode_msg.reply_mode = static_cast<uint8_t>(hand->getReplyMode());
     reply_mode_pub.publish(reply_mode_msg);
 
-    /*ros::Time cur_loop_time = ros::Time::now();
+    ros::Time cur_loop_time = ros::Time::now();
     loop_count++;
     if (cur_loop_time - loop_freq_measure_time > ros::Duration(1.0))
     {
       ROS_INFO_STREAM("Loop frequency: " << loop_count << " Hz");
       loop_count = 0;
       loop_freq_measure_time = cur_loop_time;
-    }*/
+    }
   }
 
   hand->disconnectBLE();

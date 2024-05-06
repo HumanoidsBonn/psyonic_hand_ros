@@ -75,6 +75,8 @@ private:
   ReplyMode reply_mode_request = ReplyMode::V3;
   HandSerial hand_serial;
   HandBLE hand_ble;
+  PlotModeBLE ble_plot_mode = PlotModeBLE::DISABLE;
+  bool ble_new_data_received = false;
   bool command_received = false;
 
   std::unique_ptr<HandReply> status = nullptr;
@@ -93,6 +95,7 @@ public:
 
   void setVoltageCommand(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 
+  void handMessageReceivedBLE(SimpleBLE::ByteArray payload);
   void writePositionBLE(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 
   bool connectSerial(const std::string& device);

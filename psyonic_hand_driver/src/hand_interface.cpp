@@ -41,6 +41,12 @@ bool PsyonicHand::setControlInterface(ControlInterface interface)
   if (interface == ControlInterface::SERIAL)
   {
     control_interface = ControlInterface::SERIAL;
+    if (!hand_ble.sendCommand(to_command(PlotModeBLE::DISABLE)))
+    {
+      ROS_ERROR("Failed to disable plot mode");
+      return false;
+    }
+    ble_plot_mode = PlotModeBLE::DISABLE;
     return true;
   }
   else if (interface == ControlInterface::BLE)
@@ -51,6 +57,12 @@ bool PsyonicHand::setControlInterface(ControlInterface interface)
       return false;
     }
     control_interface = ControlInterface::BLE;
+    if (!hand_ble.sendCommand(to_command(PlotModeBLE::FINGER_POSITION)))
+    {
+      ROS_ERROR("Failed to set plot mode to finger position");
+      return false;
+    }
+    ble_plot_mode = PlotModeBLE::FINGER_POSITION;
     return true;
   }
   return false;
@@ -84,6 +96,34 @@ void PsyonicHand::setVoltageCommand(double index, double middle, double ring, do
   joint_states.pinky.cmd_vol = pinky;
   joint_states.thumb1.cmd_vol = thumb1;
   joint_states.thumb2.cmd_vol = thumb2;
+}
+
+void PsyonicHand::handMessageReceivedBLE(SimpleBLE::ByteArray payload)
+{
+  if (ble_plot_mode == PlotModeBLE::FINGER_POSITION)
+  {
+    if (payload.size() != 6 * sizeof(float))
+    {
+      ROS_ERROR_STREAM("Received invalid message: " << payload.size() << " bytes");
+      return;
+    }
+    float* data = reinterpret_cast<float*>(payload.data());
+    joint_states.index.pos = data[0] * M_PI / 180.0;
+    joint_states.middle.pos = data[1] * M_PI / 180.0;
+    joint_states.ring.pos = data[2] * M_PI / 180.0;
+    joint_states.pinky.pos = data[3] * M_PI / 180.0;
+    joint_states.thumb2.pos = data[4] * M_PI / 180.0;
+    joint_states.thumb1.pos = data[5] * M_PI / 180.0;
+    ble_new_data_received = true;
+  }
+  else if (ble_plot_mode == PlotModeBLE::DISABLE)
+  {
+    ROS_ERROR("Received message in disabled plot mode");
+  }
+  else
+  {
+    ROS_ERROR("Unknown plot mode");
+  }
 }
 
 void PsyonicHand::writePositionBLE(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator)
@@ -121,6 +161,12 @@ bool PsyonicHand::connectBLE(const ros::Duration &timeout)
   if (!connected)
   {
     ROS_ERROR("Failed to connect to hand");
+    return false;
+  }
+  bool receive = hand_ble.setReceiverCallback(std::bind(&PsyonicHand::handMessageReceivedBLE, this, std::placeholders::_1));
+  if (!receive)
+  {
+    ROS_ERROR("Failed to set receiver callback");
     return false;
   }
   return true;
@@ -217,18 +263,34 @@ void PsyonicHand::updateJointStates(const HandReply& reply)
 
 void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
 {
-  if (!status) // first read / last command failed
+  if (control_interface == ControlInterface::SERIAL)
   {
-    status = hand_serial.queryStatus(reply_mode_request);
-  }
+    if (!status) // first read / last command failed
+    {
+      status = hand_serial.queryStatus(reply_mode_request);
+    }
 
-  if (!status)
+    if (!status)
+    {
+      ROS_ERROR("Failed to read hand status");
+      return;
+    }
+
+    updateJointStates(*status); // use status obtained from last command sent
+  }
+  else
   {
-    ROS_ERROR("Failed to read hand status");
-    return;
+    ros::Time start = ros::Time::now();
+    while (ros::Time::now() - start < ros::Duration(0.25) && !ble_new_data_received);
+    if (!ble_new_data_received)
+    {
+      ROS_ERROR("Failed to receive new data from BLE");
+      return;
+    }
+    ble_new_data_received = false;
   }
-
-  updateJointStates(*status); // use status obtained from last command sent
+  
+  // in BLE mode, status is updated in handMessageReceivedBLE
 
   if (control_mode == ControlMode::READ_ONLY)
   {
@@ -281,18 +343,20 @@ void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
     if (control_mode == ControlMode::POSITION)
     {
       hand_ble.sendPositionCommand(joint_states.index.cmd_pos, joint_states.middle.cmd_pos, joint_states.ring.cmd_pos, joint_states.pinky.cmd_pos, joint_states.thumb2.cmd_pos, joint_states.thumb1.cmd_pos);
-      status = nullptr; // query status in read over serial for now
     }
     else
     {
       ROS_ERROR_THROTTLE(1, "Only position control is supported over BLE; using serial");
     }
   }
-  status = sendCommand();
-  if (!status)
+  else
   {
-    ROS_ERROR("Failed to send hand command");
-    return;
+    status = sendCommand();
+    if (!status)
+    {
+      ROS_ERROR("Failed to send hand command");
+      return;
+    }
   }
 }
 
