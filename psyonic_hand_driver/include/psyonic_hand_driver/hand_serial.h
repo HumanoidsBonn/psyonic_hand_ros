@@ -37,7 +37,8 @@ public:
   HandSerial();
   ~HandSerial();
 
-  bool connect(const std::string &id);
+  bool connectById(const std::string &id);
+  bool connect(const std::string &port);
   bool disconnect();
 
   std::unique_ptr<HandReply> queryStatus(ReplyMode reply_mode);

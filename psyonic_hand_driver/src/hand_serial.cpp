@@ -73,16 +73,21 @@ std::optional<std::string> HandSerial::getSerialPort(const std::string &id)
   return std::nullopt;
 }
 
-bool HandSerial::connect(const std::string &id)
+bool HandSerial::connectById(const std::string &id)
 {
   auto port = getSerialPort(id);
   if (!port)
   {
     return false;
   }
+  return connect(*port);
+}
+
+bool HandSerial::connect(const std::string &port)
+{
   try
   {
-    sp.setPort(*port);
+    sp.setPort(port);
     sp.setBaudrate(460800);
     sp.setTimeout(serial::Timeout::max(), 250, 0, 250, 0);
     sp.open();

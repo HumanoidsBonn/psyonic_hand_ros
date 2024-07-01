@@ -172,8 +172,9 @@ int main(int argc, char **argv)
   hand_ble.sendCommand("g08:0.20");*/
   
   const double max_frequency = nhp.param<double>("max_frequency", 100.0);
-  const std::string device = nhp.param<std::string>("device", "usb-FTDI_TTL232R_FTAM6SIZ-if00-port0");
-  const bool use_ble = nhp.param<bool>("use_ble", true);
+  const std::string id = nhp.param<std::string>("id", "");
+  const std::string port = nhp.param<std::string>("port", "/dev/ttyUSB0");
+  const bool use_ble = nhp.param<bool>("use_ble", false);
 
   hand = std::make_unique<psyonic_hand_driver::PsyonicHand>();
   cm = std::make_unique<controller_manager::ControllerManager>(hand.get(), cm_nh);
@@ -197,10 +198,23 @@ int main(int argc, char **argv)
   ros::ServiceServer change_control_mode_srv = nhp.advertiseService("change_control_mode", changeControlMode);
   ros::ServiceServer change_reply_mode_srv = nhp.advertiseService("change_reply_mode", changeReplyMode);
 
-  if (!hand->connectSerial(device))
+  if (id.empty())
   {
-    ROS_ERROR("Failed to connect to hand");
-    return 1;
+    ROS_INFO_STREAM("Connecting to hand on port " << port);
+    if (!hand->connectSerial(port))
+    {
+      ROS_ERROR("Failed to connect to hand");
+      return 1;
+    }
+  }
+  else
+  {
+    ROS_INFO_STREAM("Connecting to hand with ID " << id);
+    if (!hand->connectSerialById(id))
+    {
+      ROS_ERROR("Failed to connect to hand");
+      return 1;
+    }
   }
 
   if (use_ble)

@@ -131,9 +131,14 @@ void PsyonicHand::writePositionBLE(double index, double middle, double ring, dou
   hand_ble.sendPositionCommand(index, middle, ring, pinky, thumb_flexor, thumb_rotator);
 }
 
-bool PsyonicHand::connectSerial(const std::string& device)
+bool PsyonicHand::connectSerial(const std::string &port)
 {
-  return hand_serial.connect(device);
+  return hand_serial.connect(port);
+}
+
+bool PsyonicHand::connectSerialById(const std::string &id)
+{
+  return hand_serial.connectById(id);
 }
 
 bool PsyonicHand::connectBLE(const ros::Duration &timeout)

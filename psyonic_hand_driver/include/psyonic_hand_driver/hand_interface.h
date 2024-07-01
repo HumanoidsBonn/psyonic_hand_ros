@@ -98,7 +98,8 @@ public:
   void handMessageReceivedBLE(SimpleBLE::ByteArray payload);
   void writePositionBLE(double index, double middle, double ring, double pinky, double thumb_flexor, double thumb_rotator);
 
-  bool connectSerial(const std::string& device);
+  bool connectSerial(const std::string &port);
+  bool connectSerialById(const std::string &id);
   bool connectBLE(const ros::Duration &timeout);
 
   bool disconnectSerial();
