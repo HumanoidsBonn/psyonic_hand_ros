@@ -8,9 +8,10 @@
   <arg name="effort_controllers" default="hand_effort_controller"/>
 
   <!-- HRL hand ID: usb-FTDI_TTL232R_FTAM6SIZ-if00-port0 -->
+  <arg name="connect_serial" default="true" doc="Connect to hand via serial connection."/>
   <arg name="id" default="" doc="Identify serial device from /dev/serial/by-id. Useful if multiple serial devices connected (port may change). If specified, takes priority over port."/>
   <arg name="port" default="/dev/ttyUSB0" doc="Serial port to connect to. Only used if id not specified."/>
-  <arg name="use_ble" default="false" doc="Also connect to the hand via BLE. Can slow down serial connection."/>
+  <arg name="connect_ble" default="false" doc="Connect to the hand via BLE. Can slow down serial connection if used at the same time. Only position control possible."/>
 
   <group ns="$(arg controller_namespace)">
     <rosparam command="load" file="$(find psyonic_hand_driver)/config/hand_controllers.yaml"/>
@@ -33,9 +34,10 @@
     <param name="position_controllers" value="$(arg position_controllers)" />
     <param name="velocity_controllers" value="$(arg velocity_controllers)" />
     <param name="effort_controllers" value="$(arg effort_controllers)" />
+    <param name="connect_serial" value="$(arg connect_serial)" />
     <param name="id" value="$(arg id)" />
     <param name="port" value="$(arg port)" />
-    <param name="use_ble" value="$(arg use_ble)" />
+    <param name="connect_ble" value="$(arg connect_ble)" />
   </node>
 
 </launch>

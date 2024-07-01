@@ -351,7 +351,10 @@ void PsyonicHand::write(const ros::Time& time, const ros::Duration& period)
     }
     else
     {
-      ROS_ERROR_THROTTLE(1, "Only position control is supported over BLE; using serial");
+      if (control_mode != ControlMode::READ_ONLY)
+      {
+        ROS_ERROR_THROTTLE(1, "Only position control is supported over BLE");
+      }
     }
   }
   else
