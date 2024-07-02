@@ -2,9 +2,9 @@
 
 #include <pluginlib/class_list_macros.h>
 
-#include <psyonic_hand_driver/ChangeControlInterface.h>
-#include <psyonic_hand_driver/ChangeControlMode.h>
-#include <psyonic_hand_driver/ChangeReplyMode.h>
+#include <psyonic_hand_msgs/ChangeControlInterface.h>
+#include <psyonic_hand_msgs/ChangeControlMode.h>
+#include <psyonic_hand_msgs/ChangeReplyMode.h>
 
 namespace rqt_psyonic_hand
 {
@@ -81,6 +81,39 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
     ui.thumb2VoltageSpinBox
   };
 
+  touch_sensor_spinboxes = {
+    ui.touchIndex0SpinBox,
+    ui.touchIndex1SpinBox,
+    ui.touchIndex2SpinBox,
+    ui.touchIndex3SpinBox,
+    ui.touchIndex4SpinBox,
+    ui.touchIndex5SpinBox,
+    ui.touchMiddle0SpinBox,
+    ui.touchMiddle1SpinBox,
+    ui.touchMiddle2SpinBox,
+    ui.touchMiddle3SpinBox,
+    ui.touchMiddle4SpinBox,
+    ui.touchMiddle5SpinBox,
+    ui.touchRing0SpinBox,
+    ui.touchRing1SpinBox,
+    ui.touchRing2SpinBox,
+    ui.touchRing3SpinBox,
+    ui.touchRing4SpinBox,
+    ui.touchRing5SpinBox,
+    ui.touchPinky0SpinBox,
+    ui.touchPinky1SpinBox,
+    ui.touchPinky2SpinBox,
+    ui.touchPinky3SpinBox,
+    ui.touchPinky4SpinBox,
+    ui.touchPinky5SpinBox,
+    ui.touchThumb0SpinBox,
+    ui.touchThumb1SpinBox,
+    ui.touchThumb2SpinBox,
+    ui.touchThumb3SpinBox,
+    ui.touchThumb4SpinBox,
+    ui.touchThumb5SpinBox
+  };
+
   ui.positionCommandsGroupBox->setEnabled(false);
   ui.velocityCommandsGroupBox->setEnabled(false);
   ui.effortCommandsGroupBox->setEnabled(false);
@@ -109,10 +142,14 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(this, &PsyonicHandRqtPlugin::controlInterfaceUpdated, this, &PsyonicHandRqtPlugin::updateControlInterfaceGUI);
   connect(this, &PsyonicHandRqtPlugin::controlModeUpdated, this, &PsyonicHandRqtPlugin::updateControlModeGUI);
   connect(this, &PsyonicHandRqtPlugin::replyModeUpdated, this, &PsyonicHandRqtPlugin::updateReplyModeGUI);
+  connect(this, &PsyonicHandRqtPlugin::handStatusUpdated, this, &PsyonicHandRqtPlugin::updateHandStatusGUI);
+  connect(this, &PsyonicHandRqtPlugin::touchSensorDataUpdated, this, &PsyonicHandRqtPlugin::updateTouchSensorDataGUI);
   joint_state_sub = getNodeHandle().subscribe("/hand/joint_states", 1, &PsyonicHandRqtPlugin::jointStateCallback, this);
   control_interface_sub = getNodeHandle().subscribe("/hand_interface/control_interface", 1, &PsyonicHandRqtPlugin::controlInterfaceCallback, this);
   control_mode_sub = getNodeHandle().subscribe("/hand_interface/control_mode", 1, &PsyonicHandRqtPlugin::controlModeCallback, this);
   reply_mode_sub = getNodeHandle().subscribe("/hand_interface/reply_mode", 1, &PsyonicHandRqtPlugin::replyModeCallback, this);
+  hand_status_sub = getNodeHandle().subscribe("/hand_interface/hand_status", 1, &PsyonicHandRqtPlugin::handStatusCallback, this);
+  touch_sensor_data_sub = getNodeHandle().subscribe("/hand_interface/touch_sensor_data", 1, &PsyonicHandRqtPlugin::touchSensorDataCallback, this);
 
   // Match sliders, spinboxes, and publishers
   for (size_t i = 0; i < NUM_CONTROLLERS; ++i)
@@ -121,9 +158,9 @@ void PsyonicHandRqtPlugin::initPlugin(qt_gui_cpp::PluginContext& context)
     connect(joint_spinboxes[i], &QDoubleSpinBox::editingFinished, this, &PsyonicHandRqtPlugin::jointCommandSpinBoxEdited);
   }
 
-  change_control_interface_client = getNodeHandle().serviceClient<psyonic_hand_driver::ChangeControlInterface>("/hand_interface/change_control_interface");
-  change_control_mode_client = getNodeHandle().serviceClient<psyonic_hand_driver::ChangeControlMode>("/hand_interface/change_control_mode");
-  change_reply_mode_client = getNodeHandle().serviceClient<psyonic_hand_driver::ChangeReplyMode>("/hand_interface/change_reply_mode");
+  change_control_interface_client = getNodeHandle().serviceClient<psyonic_hand_msgs::ChangeControlInterface>("/hand_interface/change_control_interface");
+  change_control_mode_client = getNodeHandle().serviceClient<psyonic_hand_msgs::ChangeControlMode>("/hand_interface/change_control_mode");
+  change_reply_mode_client = getNodeHandle().serviceClient<psyonic_hand_msgs::ChangeReplyMode>("/hand_interface/change_reply_mode");
 
   // connect control mode radio buttons
   connect(ui.interfaceSerialRadioButton, &QRadioButton::released, this, &PsyonicHandRqtPlugin::controlInterfaceChanged);
@@ -149,6 +186,8 @@ void PsyonicHandRqtPlugin::shutdownPlugin()
   control_interface_sub.shutdown();
   control_mode_sub.shutdown();
   reply_mode_sub.shutdown();
+  hand_status_sub.shutdown();
+  touch_sensor_data_sub.shutdown();
   change_control_interface_client.shutdown();
   change_control_mode_client.shutdown();
   change_reply_mode_client.shutdown();
@@ -172,22 +211,34 @@ void PsyonicHandRqtPlugin::jointStateCallback(const sensor_msgs::JointState::Con
   emit jointStateUpdated();
 }
 
-void PsyonicHandRqtPlugin::controlInterfaceCallback(const psyonic_hand_driver::ControlInterfaceMsg::ConstPtr& msg)
+void PsyonicHandRqtPlugin::controlInterfaceCallback(const psyonic_hand_msgs::ControlInterface::ConstPtr& msg)
 {
   control_interface_msg = *msg;
   emit controlInterfaceUpdated();
 }
 
-void PsyonicHandRqtPlugin::controlModeCallback(const psyonic_hand_driver::ControlModeMsg::ConstPtr& msg)
+void PsyonicHandRqtPlugin::controlModeCallback(const psyonic_hand_msgs::ControlMode::ConstPtr& msg)
 {
   control_mode_msg = *msg;
   emit controlModeUpdated();
 }
 
-void PsyonicHandRqtPlugin::replyModeCallback(const psyonic_hand_driver::ReplyModeMsg::ConstPtr& msg)
+void PsyonicHandRqtPlugin::replyModeCallback(const psyonic_hand_msgs::ReplyMode::ConstPtr& msg)
 {
   reply_mode_msg = *msg;
   emit replyModeUpdated();
+}
+
+void PsyonicHandRqtPlugin::handStatusCallback(const psyonic_hand_msgs::HandStatus::ConstPtr& msg)
+{
+  hand_status_msg = *msg;
+  emit handStatusUpdated();
+}
+
+void PsyonicHandRqtPlugin::touchSensorDataCallback(const psyonic_hand_msgs::TouchSensorData::ConstPtr& msg)
+{
+  touch_sensor_data_msg = *msg;
+  emit touchSensorDataUpdated();
 }
 
 void PsyonicHandRqtPlugin::jointCommandSliderMoved(int value)
@@ -218,14 +269,14 @@ void PsyonicHandRqtPlugin::jointCommandSpinBoxEdited()
 
 void PsyonicHandRqtPlugin::controlInterfaceChanged()
 {
-  psyonic_hand_driver::ChangeControlInterface srv;
+  psyonic_hand_msgs::ChangeControlInterface srv;
   if (ui.interfaceSerialRadioButton->isChecked())
   {
-    srv.request.control_interface = psyonic_hand_driver::ChangeControlInterface::Request::SERIAL;
+    srv.request.control_interface = psyonic_hand_msgs::ChangeControlInterface::Request::SERIAL;
   }
   else if (ui.interfaceBleRadioButton->isChecked())
   {
-    srv.request.control_interface = psyonic_hand_driver::ChangeControlInterface::Request::BLE;
+    srv.request.control_interface = psyonic_hand_msgs::ChangeControlInterface::Request::BLE;
   }
   else
   {
@@ -246,29 +297,29 @@ void PsyonicHandRqtPlugin::controlInterfaceChanged()
 
 void PsyonicHandRqtPlugin::controlModeChanged()
 {
-  psyonic_hand_driver::ChangeControlMode srv;
+  psyonic_hand_msgs::ChangeControlMode srv;
   if (ui.controlPositionRadioButton->isChecked())
   {
-    srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::POSITION_CONTROL;
+    srv.request.control_mode = psyonic_hand_msgs::ChangeControlMode::Request::POSITION_CONTROL;
     joint_pubs[0].publish(*pub_msg_map[&joint_pubs[0]]);
   }
   else if (ui.controlVelocityRadioButton->isChecked())
   {
-    srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::VELOCITY_CONTROL;
+    srv.request.control_mode = psyonic_hand_msgs::ChangeControlMode::Request::VELOCITY_CONTROL;
     joint_pubs[1].publish(*pub_msg_map[&joint_pubs[1]]);
   }
   else if (ui.controlTorqueRadioButton->isChecked())
   {
-    srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::TORQUE_CONTROL;
+    srv.request.control_mode = psyonic_hand_msgs::ChangeControlMode::Request::TORQUE_CONTROL;
     joint_pubs[2].publish(*pub_msg_map[&joint_pubs[2]]);
   }
   else if (ui.controlVoltageRadioButton->isChecked())
   {
-    srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::VOLTAGE_CONTROL;
+    srv.request.control_mode = psyonic_hand_msgs::ChangeControlMode::Request::VOLTAGE_CONTROL;
   }
   else if (ui.controlReadOnlyRadioButton->isChecked())
   {
-    srv.request.control_mode = psyonic_hand_driver::ChangeControlMode::Request::READ_ONLY;
+    srv.request.control_mode = psyonic_hand_msgs::ChangeControlMode::Request::READ_ONLY;
   }
   else
   {
@@ -290,18 +341,18 @@ void PsyonicHandRqtPlugin::controlModeChanged()
 
 void PsyonicHandRqtPlugin::replyModeChanged()
 {
-  psyonic_hand_driver::ChangeReplyMode srv;
+  psyonic_hand_msgs::ChangeReplyMode srv;
   if (ui.replyV1RadioButton->isChecked())
   {
-    srv.request.reply_mode = psyonic_hand_driver::ChangeReplyMode::Request::REPLY_V1;
+    srv.request.reply_mode = psyonic_hand_msgs::ChangeReplyMode::Request::REPLY_V1;
   }
   else if (ui.replyV2RadioButton->isChecked())
   {
-    srv.request.reply_mode = psyonic_hand_driver::ChangeReplyMode::Request::REPLY_V2;
+    srv.request.reply_mode = psyonic_hand_msgs::ChangeReplyMode::Request::REPLY_V2;
   }
   else if (ui.replyV3RadioButton->isChecked())
   {
-    srv.request.reply_mode = psyonic_hand_driver::ChangeReplyMode::Request::REPLY_V3;
+    srv.request.reply_mode = psyonic_hand_msgs::ChangeReplyMode::Request::REPLY_V3;
   }
   else
   {
@@ -317,6 +368,21 @@ void PsyonicHandRqtPlugin::replyModeChanged()
   {
     ROS_ERROR("Failed to change reply mode");
     return;
+  }
+}
+
+void PsyonicHandRqtPlugin::updateHandStatusGUI()
+{
+  ui.interfaceSerialRadioButton->setEnabled(hand_status_msg.serial_connected);
+  ui.interfaceBleRadioButton->setEnabled(hand_status_msg.bluetooth_connected);
+}
+
+void PsyonicHandRqtPlugin::updateTouchSensorDataGUI()
+{
+  uint16_t *data = reinterpret_cast<uint16_t*>(&touch_sensor_data_msg);
+  for (size_t i = 0; i < NUM_TOUCH_SENSORS; ++i)
+  {
+    touch_sensor_spinboxes[i]->setValue(data[i] / 4096.0 * 100.0);
   }
 }
 
@@ -346,10 +412,10 @@ void PsyonicHandRqtPlugin::updateControlInterfaceGUI()
 {
   switch (control_interface_msg.control_interface)
   {
-    case psyonic_hand_driver::ControlInterfaceMsg::SERIAL:
+    case psyonic_hand_msgs::ControlInterface::SERIAL:
       ui.interfaceSerialRadioButton->setChecked(true);
       break;
-    case psyonic_hand_driver::ControlInterfaceMsg::BLE:
+    case psyonic_hand_msgs::ControlInterface::BLE:
       ui.interfaceBleRadioButton->setChecked(true);
       break;
     default:
@@ -362,19 +428,19 @@ void PsyonicHandRqtPlugin::updateControlModeGUI()
 {
   switch (control_mode_msg.control_mode)
   {
-    case psyonic_hand_driver::ControlModeMsg::POSITION_CONTROL:
+    case psyonic_hand_msgs::ControlMode::POSITION_CONTROL:
       ui.controlPositionRadioButton->setChecked(true);
       break;
-    case psyonic_hand_driver::ControlModeMsg::VELOCITY_CONTROL:
+    case psyonic_hand_msgs::ControlMode::VELOCITY_CONTROL:
       ui.controlVelocityRadioButton->setChecked(true);
       break;
-    case psyonic_hand_driver::ControlModeMsg::TORQUE_CONTROL:
+    case psyonic_hand_msgs::ControlMode::TORQUE_CONTROL:
       ui.controlTorqueRadioButton->setChecked(true);
       break;
-    case psyonic_hand_driver::ControlModeMsg::VOLTAGE_CONTROL:
+    case psyonic_hand_msgs::ControlMode::VOLTAGE_CONTROL:
       ui.controlVoltageRadioButton->setChecked(true);
       break;
-    case psyonic_hand_driver::ControlModeMsg::READ_ONLY:
+    case psyonic_hand_msgs::ControlMode::READ_ONLY:
       ui.controlReadOnlyRadioButton->setChecked(true);
       break;
     default:
@@ -388,13 +454,13 @@ void PsyonicHandRqtPlugin::updateReplyModeGUI()
 {
   switch (reply_mode_msg.reply_mode)
   {
-    case psyonic_hand_driver::ReplyModeMsg::REPLY_V1:
+    case psyonic_hand_msgs::ReplyMode::REPLY_V1:
       ui.replyV1RadioButton->setChecked(true);
       break;
-    case psyonic_hand_driver::ReplyModeMsg::REPLY_V2:
+    case psyonic_hand_msgs::ReplyMode::REPLY_V2:
       ui.replyV2RadioButton->setChecked(true);
       break;
-    case psyonic_hand_driver::ReplyModeMsg::REPLY_V3:
+    case psyonic_hand_msgs::ReplyMode::REPLY_V3:
       ui.replyV3RadioButton->setChecked(true);
       break;
     default:

@@ -4,12 +4,14 @@
 #include <ros/ros.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <controller_manager/controller_manager.h>
-#include <psyonic_hand_driver/ControlInterfaceMsg.h>
-#include <psyonic_hand_driver/ControlModeMsg.h>
-#include <psyonic_hand_driver/ReplyModeMsg.h>
-#include <psyonic_hand_driver/ChangeControlInterface.h>
-#include <psyonic_hand_driver/ChangeControlMode.h>
-#include <psyonic_hand_driver/ChangeReplyMode.h>
+#include <psyonic_hand_msgs/ControlInterface.h>
+#include <psyonic_hand_msgs/ControlMode.h>
+#include <psyonic_hand_msgs/ReplyMode.h>
+#include <psyonic_hand_msgs/HandStatus.h>
+#include <psyonic_hand_msgs/TouchSensorData.h>
+#include <psyonic_hand_msgs/ChangeControlInterface.h>
+#include <psyonic_hand_msgs/ChangeControlMode.h>
+#include <psyonic_hand_msgs/ChangeReplyMode.h>
 
 #include <boost/algorithm/string.hpp>
 
@@ -22,7 +24,7 @@ std::vector<std::string> velocity_controllers;
 std::vector<std::string> effort_controllers;
 std::vector<std::string> active_controllers = NO_CONTROLLERS;
 
-bool changeControlInterface(psyonic_hand_driver::ChangeControlInterface::Request &req, psyonic_hand_driver::ChangeControlInterface::Response &res)
+bool changeControlInterface(psyonic_hand_msgs::ChangeControlInterface::Request &req, psyonic_hand_msgs::ChangeControlInterface::Response &res)
 {
   auto requested_interface = static_cast<psyonic_hand_driver::ControlInterface>(req.control_interface);
   if (requested_interface == hand->getControlInterface())
@@ -52,7 +54,7 @@ bool changeControlInterface(psyonic_hand_driver::ChangeControlInterface::Request
   return true;
 }
 
-bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psyonic_hand_driver::ChangeControlMode::Response &res)
+bool changeControlMode(psyonic_hand_msgs::ChangeControlMode::Request &req, psyonic_hand_msgs::ChangeControlMode::Response &res)
 {
   auto requested_mode = static_cast<psyonic_hand_driver::ControlMode>(req.control_mode);
   if (requested_mode == hand->getControlMode())
@@ -106,7 +108,7 @@ bool changeControlMode(psyonic_hand_driver::ChangeControlMode::Request &req, psy
   return true;
 }
 
-bool changeReplyMode(psyonic_hand_driver::ChangeReplyMode::Request &req, psyonic_hand_driver::ChangeReplyMode::Response &res)
+bool changeReplyMode(psyonic_hand_msgs::ChangeReplyMode::Request &req, psyonic_hand_msgs::ChangeReplyMode::Response &res)
 {
   auto requested_mode = static_cast<psyonic_hand_driver::ReplyMode>(req.reply_mode);
   if (requested_mode == hand->getReplyMode())
@@ -188,18 +190,25 @@ int main(int argc, char **argv)
 
   ros::Subscriber voltage_command_sub = cm_nh.subscribe("hand_voltage_controller/command", 1, voltageCommandCallback);
 
-  ros::Publisher control_interface_pub = nhp.advertise<psyonic_hand_driver::ControlInterfaceMsg>("control_interface", 1, true);
-  ros::Publisher control_mode_pub = nhp.advertise<psyonic_hand_driver::ControlModeMsg>("control_mode", 1, true);
-  ros::Publisher reply_mode_pub = nhp.advertise<psyonic_hand_driver::ReplyModeMsg>("reply_mode", 1, true);
+  ros::Publisher control_interface_pub = nhp.advertise<psyonic_hand_msgs::ControlInterface>("control_interface", 1, false);
+  ros::Publisher control_mode_pub = nhp.advertise<psyonic_hand_msgs::ControlMode>("control_mode", 1, false);
+  ros::Publisher reply_mode_pub = nhp.advertise<psyonic_hand_msgs::ReplyMode>("reply_mode", 1, false);
+  ros::Publisher hand_status_pub = nhp.advertise<psyonic_hand_msgs::HandStatus>("hand_status", 1, false);
+  ros::Publisher touch_sensor_pub = nhp.advertise<psyonic_hand_msgs::TouchSensorData>("touch_sensor_data", 1, false);
 
-  psyonic_hand_driver::ControlInterfaceMsg control_interface_msg;
+  psyonic_hand_msgs::ControlInterface control_interface_msg;
   control_interface_msg.control_interface = static_cast<uint8_t>(hand->getControlInterface());
 
-  psyonic_hand_driver::ControlModeMsg control_mode_msg;
+  psyonic_hand_msgs::ControlMode control_mode_msg;
   control_mode_msg.control_mode = static_cast<uint8_t>(hand->getControlMode());
 
-  psyonic_hand_driver::ReplyModeMsg reply_mode_msg;
+  psyonic_hand_msgs::ReplyMode reply_mode_msg;
   reply_mode_msg.reply_mode = static_cast<uint8_t>(hand->getReplyMode());
+
+  psyonic_hand_msgs::HandStatus hand_status_msg;
+  
+  psyonic_hand_msgs::TouchSensorData touch_sensor_msg;
+  static_assert(sizeof(psyonic_hand_msgs::TouchSensorData) == sizeof(psyonic_hand_driver::UnpackedTouchSensorData), "TouchSensorData message size mismatch");
 
   ros::ServiceServer change_control_interface_srv = nhp.advertiseService("change_control_interface", changeControlInterface);
   ros::ServiceServer change_control_mode_srv = nhp.advertiseService("change_control_mode", changeControlMode);
@@ -225,6 +234,7 @@ int main(int argc, char **argv)
         return 1;
       }
     }
+    hand_status_msg.serial_connected = true;
   }
   
   if (connect_ble)
@@ -241,6 +251,7 @@ int main(int argc, char **argv)
     {
       hand->setControlInterface(psyonic_hand_driver::ControlInterface::BLE);
     }
+    hand_status_msg.bluetooth_connected = true;
   }
 
   ros::Time last_read_time = ros::Time::now();
@@ -256,9 +267,6 @@ int main(int argc, char **argv)
     ros::Time update_time = ros::Time::now();
     cm->update(update_time, update_time - last_update_time);
     last_update_time = update_time;
-    ros::Time write_time = ros::Time::now();
-    hand->write(write_time, write_time - last_write_time);
-    last_write_time = write_time;
 
     control_interface_msg.control_interface = static_cast<uint8_t>(hand->getControlInterface());
     control_interface_pub.publish(control_interface_msg);
@@ -266,6 +274,18 @@ int main(int argc, char **argv)
     control_mode_pub.publish(control_mode_msg);
     reply_mode_msg.reply_mode = static_cast<uint8_t>(hand->getReplyMode());
     reply_mode_pub.publish(reply_mode_msg);
+    hand_status_pub.publish(hand_status_msg);
+  
+    psyonic_hand_driver::UnpackedTouchSensorData *touch_sensor_data = hand->getTouchSensorData();
+    if (touch_sensor_data)
+    {
+      memcpy(&touch_sensor_msg, touch_sensor_data, sizeof(psyonic_hand_driver::UnpackedTouchSensorData));
+      touch_sensor_pub.publish(touch_sensor_msg);
+    }
+
+    ros::Time write_time = ros::Time::now();
+    hand->write(write_time, write_time - last_write_time);
+    last_write_time = write_time;
 
     ros::Time cur_loop_time = ros::Time::now();
     loop_count++;

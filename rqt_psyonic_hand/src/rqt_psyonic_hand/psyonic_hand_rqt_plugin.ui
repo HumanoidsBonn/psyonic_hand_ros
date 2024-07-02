@@ -7,39 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>650</width>
-    <height>1134</height>
+    <height>1158</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QGroupBox" name="controlInterfaceGroupBox">
-     <property name="title">
-      <string>Control Interface</string>
-     </property>
-     <layout class="QGridLayout" name="controlInterfaceGridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="interfaceSerialRadioButton">
-        <property name="text">
-         <string>Serial</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="interfaceBleRadioButton">
-        <property name="text">
-         <string>BLE</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item row="0" column="1" colspan="2">
     <widget class="QGroupBox" name="controlModeGroupBox">
      <property name="title">
@@ -81,42 +55,6 @@
        <widget class="QRadioButton" name="controlReadOnlyRadioButton">
         <property name="text">
          <string>Read Only</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="1" column="0" colspan="3">
-    <widget class="QGroupBox" name="replyModeGroupBox">
-     <property name="title">
-      <string>Reply Mode</string>
-     </property>
-     <layout class="QGridLayout" name="replyModeGridLayout">
-      <item row="0" column="0">
-       <widget class="QRadioButton" name="replyV1RadioButton">
-        <property name="text">
-         <string>V1 (Position, Torque, Touch)</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QRadioButton" name="replyV2RadioButton">
-        <property name="text">
-         <string>V2 (Position, Velocities, Touch)</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QRadioButton" name="replyV3RadioButton">
-        <property name="text">
-         <string>V3 (Pos, Velocities, Torques)</string>
         </property>
         <property name="checked">
          <bool>true</bool>
@@ -709,7 +647,7 @@
        </widget>
       </item>
       <item row="6" column="0">
-       <widget class="QLabel" name="label">
+       <widget class="QLabel" name="jointStateVelocityLabel">
         <property name="text">
          <string>Velocity</string>
         </property>
@@ -860,324 +798,9 @@
        </widget>
       </item>
       <item row="13" column="0">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="jointStateEffortLabel">
         <property name="text">
          <string>Effort</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item row="3" column="0" colspan="2">
-    <widget class="QGroupBox" name="velocityCommandsGroupBox">
-     <property name="title">
-      <string>Joint velocity commands</string>
-     </property>
-     <layout class="QGridLayout" name="velocityCommandsridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="indexVelocityLabel">
-        <property name="text">
-         <string>Index:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QSlider" name="indexVelocitySlider">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimum">
-         <number>-462</number>
-        </property>
-        <property name="maximum">
-         <number>462</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QDoubleSpinBox" name="indexVelocitySpinBox">
-        <property name="suffix">
-         <string>°/s</string>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="middleVelocityLabel">
-        <property name="text">
-         <string>Middle:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSlider" name="middleVelocitySlider">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimum">
-         <number>-462</number>
-        </property>
-        <property name="maximum">
-         <number>462</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QDoubleSpinBox" name="middleVelocitySpinBox">
-        <property name="suffix">
-         <string>°/s</string>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="ringVelocityLabel">
-        <property name="text">
-         <string>Ring:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QSlider" name="ringVelocitySlider">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimum">
-         <number>-462</number>
-        </property>
-        <property name="maximum">
-         <number>462</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QDoubleSpinBox" name="ringVelocitySpinBox">
-        <property name="suffix">
-         <string>°/s</string>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="pinkyVelocityLabel">
-        <property name="text">
-         <string>Pinky:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QSlider" name="pinkyVelocitySlider">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimum">
-         <number>-462</number>
-        </property>
-        <property name="maximum">
-         <number>462</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QDoubleSpinBox" name="pinkyVelocitySpinBox">
-        <property name="suffix">
-         <string>°/s</string>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="thumb1VelocityLabel">
-        <property name="text">
-         <string>Thumb 1:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QSlider" name="thumb1VelocitySlider">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimum">
-         <number>-462</number>
-        </property>
-        <property name="maximum">
-         <number>462</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QDoubleSpinBox" name="thumb1VelocitySpinBox">
-        <property name="suffix">
-         <string>°/s</string>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QLabel" name="thumb2VelocityLabel">
-        <property name="text">
-         <string>Thumb 2:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QSlider" name="thumb2VelocitySlider">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimum">
-         <number>-462</number>
-        </property>
-        <property name="maximum">
-         <number>462</number>
-        </property>
-        <property name="value">
-         <number>0</number>
-        </property>
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <widget class="QDoubleSpinBox" name="thumb2VelocitySpinBox">
-        <property name="suffix">
-         <string>°/s</string>
-        </property>
-        <property name="decimals">
-         <number>1</number>
-        </property>
-        <property name="minimum">
-         <double>-462.000000000000000</double>
-        </property>
-        <property name="maximum">
-         <double>462.000000000000000</double>
-        </property>
-        <property name="singleStep">
-         <double>0.100000000000000</double>
-        </property>
-        <property name="value">
-         <double>0.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -1814,11 +1437,635 @@
      </layout>
     </widget>
    </item>
+   <item row="1" column="0" colspan="3">
+    <widget class="QGroupBox" name="replyModeGroupBox">
+     <property name="title">
+      <string>Reply Mode</string>
+     </property>
+     <layout class="QGridLayout" name="replyModeGridLayout">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="replyV1RadioButton">
+        <property name="text">
+         <string>V1 (Position, Torque, Touch)</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="replyV2RadioButton">
+        <property name="text">
+         <string>V2 (Position, Velocities, Touch)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QRadioButton" name="replyV3RadioButton">
+        <property name="text">
+         <string>V3 (Pos, Velocities, Torques)</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="2">
+    <widget class="QGroupBox" name="velocityCommandsGroupBox">
+     <property name="title">
+      <string>Joint velocity commands</string>
+     </property>
+     <layout class="QGridLayout" name="velocityCommandsridLayout">
+      <item row="0" column="0">
+       <widget class="QLabel" name="indexVelocityLabel">
+        <property name="text">
+         <string>Index:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSlider" name="indexVelocitySlider">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QDoubleSpinBox" name="indexVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="middleVelocityLabel">
+        <property name="text">
+         <string>Middle:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QSlider" name="middleVelocitySlider">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="middleVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="ringVelocityLabel">
+        <property name="text">
+         <string>Ring:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QSlider" name="ringVelocitySlider">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="ringVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="pinkyVelocityLabel">
+        <property name="text">
+         <string>Pinky:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QSlider" name="pinkyVelocitySlider">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QDoubleSpinBox" name="pinkyVelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="thumb1VelocityLabel">
+        <property name="text">
+         <string>Thumb 1:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QSlider" name="thumb1VelocitySlider">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QDoubleSpinBox" name="thumb1VelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="thumb2VelocityLabel">
+        <property name="text">
+         <string>Thumb 2:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QSlider" name="thumb2VelocitySlider">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>-462</number>
+        </property>
+        <property name="maximum">
+         <number>462</number>
+        </property>
+        <property name="value">
+         <number>0</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QDoubleSpinBox" name="thumb2VelocitySpinBox">
+        <property name="suffix">
+         <string>°/s</string>
+        </property>
+        <property name="decimals">
+         <number>1</number>
+        </property>
+        <property name="minimum">
+         <double>-462.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>462.000000000000000</double>
+        </property>
+        <property name="singleStep">
+         <double>0.100000000000000</double>
+        </property>
+        <property name="value">
+         <double>0.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QGroupBox" name="controlInterfaceGroupBox">
+     <property name="title">
+      <string>Control Interface</string>
+     </property>
+     <layout class="QGridLayout" name="controlInterfaceGridLayout">
+      <item row="0" column="0">
+       <widget class="QRadioButton" name="interfaceSerialRadioButton">
+        <property name="text">
+         <string>Serial</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QRadioButton" name="interfaceBleRadioButton">
+        <property name="text">
+         <string>BLE</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
    <item row="5" column="2">
     <widget class="QGroupBox" name="touchDataGroupBox">
      <property name="title">
       <string>Touch data</string>
      </property>
+     <layout class="QGridLayout" name="gridLayout_2">
+      <item row="0" column="0">
+       <widget class="QLabel" name="touchIndexLabel">
+        <property name="text">
+         <string>Index</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="touchMiddleLabel">
+        <property name="text">
+         <string>Middle</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLabel" name="touchRingLabel">
+        <property name="text">
+         <string>Ring</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QLabel" name="touchPinkyLabel">
+        <property name="text">
+         <string>Pinky</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="4">
+       <widget class="QLabel" name="touchThumbLabel">
+        <property name="text">
+         <string>Thumb</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QDoubleSpinBox" name="touchIndex0SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="touchMiddle0SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QDoubleSpinBox" name="touchRing0SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="3">
+       <widget class="QDoubleSpinBox" name="touchPinky0SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QDoubleSpinBox" name="touchThumb0SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QDoubleSpinBox" name="touchIndex1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="touchMiddle1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QDoubleSpinBox" name="touchRing1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QDoubleSpinBox" name="touchPinky1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QDoubleSpinBox" name="touchThumb1SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0">
+       <widget class="QDoubleSpinBox" name="touchIndex2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QDoubleSpinBox" name="touchMiddle2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QDoubleSpinBox" name="touchRing2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QDoubleSpinBox" name="touchPinky2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QDoubleSpinBox" name="touchThumb2SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QDoubleSpinBox" name="touchIndex3SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QDoubleSpinBox" name="touchMiddle3SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QDoubleSpinBox" name="touchRing3SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QDoubleSpinBox" name="touchPinky3SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
+       <widget class="QDoubleSpinBox" name="touchThumb3SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QDoubleSpinBox" name="touchIndex4SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QDoubleSpinBox" name="touchMiddle4SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <widget class="QDoubleSpinBox" name="touchRing4SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QDoubleSpinBox" name="touchPinky4SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="4">
+       <widget class="QDoubleSpinBox" name="touchThumb4SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QDoubleSpinBox" name="touchIndex5SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="1">
+       <widget class="QDoubleSpinBox" name="touchMiddle5SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="2">
+       <widget class="QDoubleSpinBox" name="touchRing5SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QDoubleSpinBox" name="touchPinky5SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="4">
+       <widget class="QDoubleSpinBox" name="touchThumb5SpinBox">
+        <property name="readOnly">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
   </layout>

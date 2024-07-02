@@ -80,6 +80,7 @@ private:
   bool command_received = false;
 
   std::unique_ptr<HandReply> status = nullptr;
+  std::unique_ptr<UnpackedTouchSensorData> touch_sensor_data = nullptr;
 
 public:
   PsyonicHand();
@@ -88,6 +89,7 @@ public:
   ControlInterface getControlInterface() const { return control_interface; }
   ControlMode getControlMode() const { return control_mode; }
   ReplyMode getReplyMode() const { return reply_mode_request; }
+  UnpackedTouchSensorData* getTouchSensorData() const { return touch_sensor_data.get(); }
 
   bool setControlInterface(ControlInterface interface);
   bool setControlMode(ControlMode mode);
@@ -116,7 +118,7 @@ public:
    *
    * \param reply The hand reply
    */
-  void updateJointStates(const HandReply& reply);
+  void updateJointStates(const HandReply &reply, const ros::Duration &period);
 
   /** \brief Read data from the robot hardware.
    *

@@ -4,9 +4,11 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <std_msgs/Float64MultiArray.h>
 #include <sensor_msgs/JointState.h>
-#include <psyonic_hand_driver/ControlInterfaceMsg.h>
-#include <psyonic_hand_driver/ControlModeMsg.h>
-#include <psyonic_hand_driver/ReplyModeMsg.h>
+#include <psyonic_hand_msgs/ControlInterface.h>
+#include <psyonic_hand_msgs/ControlMode.h>
+#include <psyonic_hand_msgs/ReplyMode.h>
+#include <psyonic_hand_msgs/HandStatus.h>
+#include <psyonic_hand_msgs/TouchSensorData.h>
 
 #include "ui_psyonic_hand_rqt_plugin.h"
 
@@ -32,11 +34,14 @@ private slots:
   void jointCommandSpinBoxEdited();
   void controlInterfaceChanged();
   void controlModeChanged();
-  void replyModeChanged();
+  void replyModeChanged(); 
+ 
   void updateJointStateGUI();
   void updateControlInterfaceGUI();
   void updateControlModeGUI();
   void updateReplyModeGUI();
+  void updateHandStatusGUI();
+  void updateTouchSensorDataGUI();
   void updateJointCommandGUI();
 
 signals:
@@ -44,19 +49,24 @@ signals:
   void controlInterfaceUpdated();
   void controlModeUpdated();
   void replyModeUpdated();
+  void handStatusUpdated();
+  void touchSensorDataUpdated();
 
 private:
   Ui::PsyonicHandRqtPlugin ui;
   QWidget* widget;
 
   void jointStateCallback(const sensor_msgs::JointState::ConstPtr& msg);
-  void controlInterfaceCallback(const psyonic_hand_driver::ControlInterfaceMsg::ConstPtr& msg);
-  void controlModeCallback(const psyonic_hand_driver::ControlModeMsg::ConstPtr& msg);
-  void replyModeCallback(const psyonic_hand_driver::ReplyModeMsg::ConstPtr& msg);
+  void controlInterfaceCallback(const psyonic_hand_msgs::ControlInterface::ConstPtr& msg);
+  void controlModeCallback(const psyonic_hand_msgs::ControlMode::ConstPtr& msg);
+  void replyModeCallback(const psyonic_hand_msgs::ReplyMode::ConstPtr& msg);
+  void handStatusCallback(const psyonic_hand_msgs::HandStatus::ConstPtr& msg);
+  void touchSensorDataCallback(const psyonic_hand_msgs::TouchSensorData::ConstPtr& msg);
 
   static constexpr size_t NUM_CONTROLLER_TYPES = 4;
   static constexpr size_t NUM_HAND_JOINTS = 6;
   static constexpr size_t NUM_CONTROLLERS = NUM_CONTROLLER_TYPES * NUM_HAND_JOINTS;
+  static constexpr size_t NUM_TOUCH_SENSORS = 30;
 
   std::array<std::string, NUM_HAND_JOINTS> JOINT_NAMES = {
     "index",
@@ -91,16 +101,21 @@ private:
   std::array<ros::Publisher, NUM_CONTROLLER_TYPES> joint_pubs;
   std::array<QSlider*, NUM_CONTROLLERS> joint_sliders;
   std::array<QDoubleSpinBox*, NUM_CONTROLLERS> joint_spinboxes;
+  std::array<QDoubleSpinBox*, NUM_TOUCH_SENSORS> touch_sensor_spinboxes;
   std::array<std_msgs::Float64MultiArray, NUM_CONTROLLERS> joint_commands;
 
   ros::Subscriber joint_state_sub;
   sensor_msgs::JointState joint_state_msg;
   ros::Subscriber control_interface_sub;
-  psyonic_hand_driver::ControlInterfaceMsg control_interface_msg;
+  psyonic_hand_msgs::ControlInterface control_interface_msg;
   ros::Subscriber control_mode_sub;
-  psyonic_hand_driver::ControlModeMsg control_mode_msg;
+  psyonic_hand_msgs::ControlMode control_mode_msg;
   ros::Subscriber reply_mode_sub;
-  psyonic_hand_driver::ReplyModeMsg reply_mode_msg;
+  psyonic_hand_msgs::ReplyMode reply_mode_msg;
+  ros::Subscriber hand_status_sub;
+  psyonic_hand_msgs::HandStatus hand_status_msg;
+  ros::Subscriber touch_sensor_data_sub;
+  psyonic_hand_msgs::TouchSensorData touch_sensor_data_msg;
 
   ros::ServiceClient change_control_interface_client;
   ros::ServiceClient change_control_mode_client;

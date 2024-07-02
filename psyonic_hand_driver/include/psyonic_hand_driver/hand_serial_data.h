@@ -217,7 +217,7 @@ struct DecodedHandReplyV1or2
   double thumb_flexor_torque_or_velocity;
   double thumb_rotator_position;
   double thumb_rotator_torque_or_velocity;
-  std::unique_ptr<DecodedTouchSensorData> touch_sensor_data;
+  std::unique_ptr<UnpackedTouchSensorData> touch_sensor_data;
   uint8_t hot_cold_status;
 };
 

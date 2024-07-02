@@ -208,7 +208,7 @@ std::unique_ptr<HandReply> PsyonicHand::sendCommand()
   }
 }
 
-void PsyonicHand::updateJointStates(const HandReply& reply)
+void PsyonicHand::updateJointStates(const HandReply &reply, const ros::Duration &period)
 {
   ReplyMode reply_mode = reply.replyMode();
   if (reply_mode == ReplyMode::V3)
@@ -234,19 +234,22 @@ void PsyonicHand::updateJointStates(const HandReply& reply)
     joint_states.pinky.vel = decoded->pinky_velocity;
     joint_states.thumb2.vel = decoded->thumb_flexor_velocity;
     joint_states.thumb1.vel = decoded->thumb_rotator_velocity;
+
+    touch_sensor_data = nullptr;
   }
   else
   {
     auto decoded = reply.v1or2.decode();
-    joint_states.index.pos = decoded->index_position;
-    joint_states.middle.pos = decoded->middle_position;
-    joint_states.ring.pos = decoded->ring_position;
-    joint_states.pinky.pos = decoded->pinky_position;
-    joint_states.thumb2.pos = decoded->thumb_flexor_position;
-    joint_states.thumb1.pos = decoded->thumb_rotator_position;
 
     if (reply_mode == ReplyMode::V1) // torque -> effort
     {
+      joint_states.index.vel = (decoded->index_position - joint_states.index.pos) / period.toSec();
+      joint_states.middle.vel = (decoded->middle_position - joint_states.middle.pos) / period.toSec();
+      joint_states.ring.vel = (decoded->ring_position - joint_states.ring.pos) / period.toSec();
+      joint_states.pinky.vel = (decoded->pinky_position - joint_states.pinky.pos) / period.toSec();
+      joint_states.thumb2.vel = (decoded->thumb_flexor_position - joint_states.thumb2.pos) / period.toSec();
+      joint_states.thumb1.vel = (decoded->thumb_rotator_position - joint_states.thumb1.pos) / period.toSec();
+
       joint_states.index.eff = decoded->index_torque_or_velocity;
       joint_states.middle.eff = decoded->middle_torque_or_velocity;
       joint_states.ring.eff = decoded->ring_torque_or_velocity;
@@ -263,6 +266,15 @@ void PsyonicHand::updateJointStates(const HandReply& reply)
       joint_states.thumb2.vel = decoded->thumb_flexor_torque_or_velocity;
       joint_states.thumb1.vel = decoded->thumb_rotator_torque_or_velocity;
     }
+
+    joint_states.index.pos = decoded->index_position;
+    joint_states.middle.pos = decoded->middle_position;
+    joint_states.ring.pos = decoded->ring_position;
+    joint_states.pinky.pos = decoded->pinky_position;
+    joint_states.thumb2.pos = decoded->thumb_flexor_position;
+    joint_states.thumb1.pos = decoded->thumb_rotator_position;
+
+    touch_sensor_data = std::move(decoded->touch_sensor_data);
   }
 }
 
@@ -281,7 +293,7 @@ void PsyonicHand::read(const ros::Time& time, const ros::Duration& period)
       return;
     }
 
-    updateJointStates(*status); // use status obtained from last command sent
+    updateJointStates(*status, period); // use status obtained from last command sent
   }
   else
   {

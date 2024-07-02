@@ -56,8 +56,7 @@
   <depend>rqt_gui_cpp</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
-  <depend>psyonic_hand_driver</depend>
-  <!--depend>moveit_setup_assistant</depend-->
+  <depend>psyonic_hand_msgs</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

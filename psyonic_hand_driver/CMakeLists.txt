@@ -9,6 +9,7 @@ set (CATKIN_DEPENDENCIES
     rospy
     pluginlib
     std_msgs
+    psyonic_hand_msgs
     hardware_interface
     controller_manager
     serial
@@ -17,7 +18,7 @@ set (CATKIN_DEPENDENCIES
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDENCIES} message_generation)
+find_package(catkin REQUIRED COMPONENTS ${CATKIN_DEPENDENCIES})
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -59,12 +60,6 @@ add_subdirectory(SimpleBLE/simpleble ${CMAKE_BINARY_DIR}/simpleble)
 #   Message1.msg
 #   Message2.msg
 # )
-add_message_files(
-  FILES
-  ControlInterfaceMsg.msg
-  ControlModeMsg.msg
-  ReplyModeMsg.msg
-)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -72,12 +67,6 @@ add_message_files(
 #   Service1.srv
 #   Service2.srv
 # )
-add_service_files(
-  FILES
-  ChangeControlInterface.srv
-  ChangeControlMode.srv
-  ChangeReplyMode.srv
-)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -91,7 +80,6 @@ add_service_files(
 #   DEPENDENCIES
 #   std_msgs  # Or other packages containing msgs
 # )
-generate_messages()
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -125,7 +113,7 @@ generate_messages()
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ${PROJECT_NAME}_plugin
-   CATKIN_DEPENDS ${CATKIN_DEPENDENCIES} message_runtime
+   CATKIN_DEPENDS ${CATKIN_DEPENDENCIES}
 #  DEPENDS system_lib
 )
 

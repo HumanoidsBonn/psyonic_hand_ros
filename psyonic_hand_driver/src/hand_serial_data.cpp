@@ -150,7 +150,7 @@ std::unique_ptr<DecodedHandReplyV1or2> HandReplyV1or2::decode() const
     decoded_reply->thumb_rotator_torque_or_velocity = rotorVelToRadPerSec(thumb_rotator_current_or_velocity) / 162.45;
   }
 
-  decoded_reply->touch_sensor_data = unpackTouchSensorData()->decode();
+  decoded_reply->touch_sensor_data = unpackTouchSensorData();
 
   decoded_reply->hot_cold_status = hot_cold_status;
 
