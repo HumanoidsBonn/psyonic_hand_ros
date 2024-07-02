@@ -102,18 +102,37 @@ void PsyonicHand::handMessageReceivedBLE(SimpleBLE::ByteArray payload)
 {
   if (ble_plot_mode == PlotModeBLE::FINGER_POSITION)
   {
-    if (payload.size() != 6 * sizeof(float))
+    if (payload.size() != NUM_HAND_JOINTS * sizeof(float))
     {
       ROS_ERROR_STREAM("Received invalid message: " << payload.size() << " bytes");
       return;
     }
     float* data = reinterpret_cast<float*>(payload.data());
-    joint_states.index.pos = data[0] * M_PI / 180.0;
-    joint_states.middle.pos = data[1] * M_PI / 180.0;
-    joint_states.ring.pos = data[2] * M_PI / 180.0;
-    joint_states.pinky.pos = data[3] * M_PI / 180.0;
-    joint_states.thumb2.pos = data[4] * M_PI / 180.0;
-    joint_states.thumb1.pos = data[5] * M_PI / 180.0;
+
+    double new_joint_pos[NUM_HAND_JOINTS] = {
+      data[0] * M_PI / 180.0,
+      data[1] * M_PI / 180.0,
+      data[2] * M_PI / 180.0,
+      data[3] * M_PI / 180.0,
+      data[5] * M_PI / 180.0,
+      data[4] * M_PI / 180.0
+    };
+
+    static ros::Time last_time = ros::Time::now();
+    ros::Time current_time = ros::Time::now();
+    ros::Duration period = current_time - last_time;
+
+    for (size_t i = 0; i < NUM_HAND_JOINTS; i++)
+    {
+      if (period.toSec() > 0)
+      {
+        joint_states[i].vel = (new_joint_pos[i] - joint_states[i].pos) / period.toSec();
+      }
+      joint_states[i].pos = new_joint_pos[i];
+    }
+
+    last_time = current_time;
+
     ble_new_data_received = true;
   }
   else if (ble_plot_mode == PlotModeBLE::DISABLE)

@@ -390,20 +390,20 @@ void PsyonicHandRqtPlugin::updateJointStateGUI()
 {
   ui.statePosIndexSpinBox->setValue(joint_state_msg.position[0] / MSG_VALUE_SPINBOX_RATIOS[0]);
   ui.statePosMiddleSpinBox->setValue(joint_state_msg.position[1] / MSG_VALUE_SPINBOX_RATIOS[0]);
-  ui.statePosRingSpinBox->setValue(joint_state_msg.position[2] / MSG_VALUE_SPINBOX_RATIOS[0]);
-  ui.statePosPinkySpinBox->setValue(joint_state_msg.position[3] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.statePosRingSpinBox->setValue(joint_state_msg.position[3] / MSG_VALUE_SPINBOX_RATIOS[0]);
+  ui.statePosPinkySpinBox->setValue(joint_state_msg.position[2] / MSG_VALUE_SPINBOX_RATIOS[0]);
   ui.statePosThumb1SpinBox->setValue(joint_state_msg.position[4] / MSG_VALUE_SPINBOX_RATIOS[0]);
   ui.statePosThumb2SpinBox->setValue(joint_state_msg.position[5] / MSG_VALUE_SPINBOX_RATIOS[0]);
   ui.stateVelIndexSpinBox->setValue(joint_state_msg.velocity[0] / MSG_VALUE_SPINBOX_RATIOS[1]);
   ui.stateVelMiddleSpinBox->setValue(joint_state_msg.velocity[1] / MSG_VALUE_SPINBOX_RATIOS[1]);
-  ui.stateVelRingSpinBox->setValue(joint_state_msg.velocity[2] / MSG_VALUE_SPINBOX_RATIOS[1]);
-  ui.stateVelPinkySpinBox->setValue(joint_state_msg.velocity[3] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateVelRingSpinBox->setValue(joint_state_msg.velocity[3] / MSG_VALUE_SPINBOX_RATIOS[1]);
+  ui.stateVelPinkySpinBox->setValue(joint_state_msg.velocity[2] / MSG_VALUE_SPINBOX_RATIOS[1]);
   ui.stateVelThumb1SpinBox->setValue(joint_state_msg.velocity[4] / MSG_VALUE_SPINBOX_RATIOS[1]);
   ui.stateVelThumb2SpinBox->setValue(joint_state_msg.velocity[5] / MSG_VALUE_SPINBOX_RATIOS[1]);
   ui.stateEffIndexSpinBox->setValue(joint_state_msg.effort[0] / MSG_VALUE_SPINBOX_RATIOS[2]);
   ui.stateEffMiddleSpinBox->setValue(joint_state_msg.effort[1] / MSG_VALUE_SPINBOX_RATIOS[2]);
-  ui.stateEffRingSpinBox->setValue(joint_state_msg.effort[2] / MSG_VALUE_SPINBOX_RATIOS[2]);
-  ui.stateEffPinkySpinBox->setValue(joint_state_msg.effort[3] / MSG_VALUE_SPINBOX_RATIOS[2]);
+  ui.stateEffRingSpinBox->setValue(joint_state_msg.effort[3] / MSG_VALUE_SPINBOX_RATIOS[2]);
+  ui.stateEffPinkySpinBox->setValue(joint_state_msg.effort[2] / MSG_VALUE_SPINBOX_RATIOS[2]);
   ui.stateEffThumb1SpinBox->setValue(joint_state_msg.effort[4] / MSG_VALUE_SPINBOX_RATIOS[2]);
   ui.stateEffThumb2SpinBox->setValue(joint_state_msg.effort[5] / MSG_VALUE_SPINBOX_RATIOS[2]);
 }
@@ -414,9 +414,17 @@ void PsyonicHandRqtPlugin::updateControlInterfaceGUI()
   {
     case psyonic_hand_msgs::ControlInterface::SERIAL:
       ui.interfaceSerialRadioButton->setChecked(true);
+      ui.controlVelocityRadioButton->setEnabled(true);
+      ui.controlTorqueRadioButton->setEnabled(true);
+      ui.controlVoltageRadioButton->setEnabled(true);
+      ui.replyModeGroupBox->setEnabled(true);
       break;
     case psyonic_hand_msgs::ControlInterface::BLE:
       ui.interfaceBleRadioButton->setChecked(true);
+      ui.controlVelocityRadioButton->setEnabled(false);
+      ui.controlTorqueRadioButton->setEnabled(false);
+      ui.controlVoltageRadioButton->setEnabled(false);
+      ui.replyModeGroupBox->setEnabled(false);
       break;
     default:
       ROS_ERROR("Unknown control interface");
@@ -477,6 +485,7 @@ void PsyonicHandRqtPlugin::updateJointCommandGUI()
     ui.effortCommandsGroupBox->setEnabled(false);
     ui.voltageCommandsGroupBox->setEnabled(false);
     ui.positionCommandsGroupBox->setEnabled(true);
+    ui.commandStackedWidget->setCurrentIndex(0);
   }
   else if (ui.controlVelocityRadioButton->isChecked())
   {
@@ -484,6 +493,7 @@ void PsyonicHandRqtPlugin::updateJointCommandGUI()
     ui.effortCommandsGroupBox->setEnabled(false);
     ui.voltageCommandsGroupBox->setEnabled(false);
     ui.velocityCommandsGroupBox->setEnabled(true);
+    ui.commandStackedWidget->setCurrentIndex(1);
   }
   else if (ui.controlTorqueRadioButton->isChecked())
   {
@@ -491,6 +501,7 @@ void PsyonicHandRqtPlugin::updateJointCommandGUI()
     ui.velocityCommandsGroupBox->setEnabled(false);
     ui.voltageCommandsGroupBox->setEnabled(false);
     ui.effortCommandsGroupBox->setEnabled(true);
+    ui.commandStackedWidget->setCurrentIndex(2);
   }
   else if (ui.controlVoltageRadioButton->isChecked())
   {
@@ -498,6 +509,7 @@ void PsyonicHandRqtPlugin::updateJointCommandGUI()
     ui.velocityCommandsGroupBox->setEnabled(false);
     ui.effortCommandsGroupBox->setEnabled(false);
     ui.voltageCommandsGroupBox->setEnabled(true);
+    ui.commandStackedWidget->setCurrentIndex(3);
   }
   else if (ui.controlReadOnlyRadioButton->isChecked())
   {
