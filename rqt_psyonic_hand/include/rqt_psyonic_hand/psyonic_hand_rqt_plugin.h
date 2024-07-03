@@ -68,6 +68,9 @@ private:
   static constexpr size_t NUM_CONTROLLERS = NUM_CONTROLLER_TYPES * NUM_HAND_JOINTS;
   static constexpr size_t NUM_TOUCH_SENSORS = 30;
 
+  bool first_touch_data = true;
+  std::array<double, NUM_TOUCH_SENSORS> touch_sensor_avg;
+
   std::array<std::string, NUM_HAND_JOINTS> JOINT_NAMES = {
     "index",
     "middle",

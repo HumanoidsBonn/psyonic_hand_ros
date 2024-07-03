@@ -379,11 +379,32 @@ void PsyonicHandRqtPlugin::updateHandStatusGUI()
 
 void PsyonicHandRqtPlugin::updateTouchSensorDataGUI()
 {
+  constexpr double C1 = 121591.0;
+  constexpr double C2 = 0.878894;
+  const double alpha = ui.touchSmoothingSpinBox->value(); // smoothing factor
+  const double touch_sensor_threshold = ui.touchThresholdSpinBox->value();
   uint16_t *data = reinterpret_cast<uint16_t*>(&touch_sensor_data_msg);
   for (size_t i = 0; i < NUM_TOUCH_SENSORS; ++i)
   {
-    touch_sensor_spinboxes[i]->setValue(data[i] / 4096.0 * 100.0);
+    double V = static_cast<double>(data[i]) * 3.3 / 4096.0;
+    double R = 33000.0 / V + 10000.0;
+    if (first_touch_data)
+      touch_sensor_avg[i] = C1 / R + C2;
+    else
+      touch_sensor_avg[i] = (1 - alpha) * touch_sensor_avg[i] + alpha * (C1 / R + C2);
+
+    touch_sensor_spinboxes[i]->setValue(touch_sensor_avg[i]); // Values between ~0.88 and 6.96
+
+    if (touch_sensor_avg[i] > touch_sensor_threshold)
+    {
+      touch_sensor_spinboxes[i]->setStyleSheet("QDoubleSpinBox { background-color: red; }");
+    }
+    else
+    {
+      touch_sensor_spinboxes[i]->setStyleSheet("");
+    }
   }
+  first_touch_data = false;
 }
 
 void PsyonicHandRqtPlugin::updateJointStateGUI()
